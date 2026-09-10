@@ -1,0 +1,37 @@
+:root {
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 14px;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  color: var(--cb-text);
+  background: var(--cb-surface);
+  --cb-surface: #fff;
+  --cb-sidebar-width: 248px;
+  --cb-header-height: 56px;
+  --cb-nav-surface: #f8f8fd;
+  --cb-editor-canvas: #fafafd;
+  --cb-selected-nav: #e5e8ed;
+  --cb-action: #4070e7;
+  --cb-action-hover: #315fcf;
+  --cb-secondary-surface: #f8fbff;
+  --cb-settings-selected: #e5f2fe;
+  --cb-text: #141925;
+  --cb-secondary: #4e5564;
+  --cb-muted: #798394;
+  --cb-placeholder: #a1a9b8;
+  --cb-border: #e5e8ed;
+  --cb-line: #f1f3f6;
+  --cb-success: #68a04e;
+  --cb-pending-bg: #fefaec;
+  --cb-pending-text: #ad4d12;
+  --cb-control-height: 36px;
+  --cb-shadow-control: 0 1px 2px #18294220;
+  --cb-customer-canvas: #e4e7eb;
+  --cb-customer-subtle: #f9fafb;
+  --cb-customer-text: #111827;
+  --cb-customer-action: #2563eb;
+  --cb-customer-action-bg: #eff6ff;
+  --cb-customer-success-bg: #f0fdf4;
+  --cb-customer-success-chip: #dcfce7;
+}

@@ -1,0 +1,104 @@
+{
+  "review_date": "2026-09-10",
+  "policy": "Visual references only; future document previews must use HTML and CSS, never generated PDFs.",
+  "files": [
+    {
+      "path": "screenshots/create-progress-invoice-flow.png",
+      "sha256": "13c1db540607791ded83c3579be9bc47c0abd230090d4c4061a596fa88a4a7a4",
+      "reviewed": true,
+      "width": 699,
+      "height": 629
+    },
+    {
+      "path": "screenshots/estimates-table.png",
+      "sha256": "8d03c913389497d830acc5118bb8562ef8187e2f3374ea3f6972971d22659e6d",
+      "reviewed": true,
+      "width": 2461,
+      "height": 1441
+    },
+    {
+      "path": "screenshots/invoices-table.png",
+      "sha256": "4c97ced715ff31054755ca2124c369e331b7c5a967ea16cc8ba6d9336ee57e20",
+      "reviewed": true,
+      "width": 2467,
+      "height": 1455
+    },
+    {
+      "path": "screenshots/job-profile.png",
+      "sha256": "462e3ddf019d37cd6e18cc5d49fe81decca820875b1e6abf0d142f87cba3e788",
+      "reviewed": true,
+      "width": 2460,
+      "height": 1447
+    },
+    {
+      "path": "screenshots/new-progress-invoice.png",
+      "sha256": "6abf2c32acde0be14b9d4421b89f3f080814654430bd3880b2ab5f197dacf645",
+      "reviewed": true,
+      "width": 1560,
+      "height": 1243
+    },
+    {
+      "path": "screenshots/pending-estimate.png",
+      "sha256": "a7dbe70c991c529a384cc3faeb56d9bcb5b3666fb29ebc72aa396ab50d69f592",
+      "reviewed": true,
+      "width": 2098,
+      "height": 1450
+    },
+    {
+      "path": "screenshots/view-progress-invoice.png",
+      "sha256": "bfa672075bd11cc643b1c5756fcec37c3456b0fb277b346b89d4256dc5812f4f",
+      "reviewed": true,
+      "width": 1568,
+      "height": 1248
+    },
+    {
+      "path": "screenshots/weblink-invoice.png",
+      "sha256": "d494c9f87af83b7ee9e2eb9f3ddc068628dacd63dfd34350c7e89225ffcebbbe",
+      "reviewed": true,
+      "width": 2472,
+      "height": 1981
+    },
+    {
+      "path": "screenshots/weblink-pending-estimate.png",
+      "sha256": "cb88815c66904e38ccd6867aaac784002c0e65e92a2f7613a5b6aa6b054d8231",
+      "reviewed": true,
+      "width": 2472,
+      "height": 1710
+    },
+    {
+      "path": "screenshots/weblink-signed-estimate.png",
+      "sha256": "1f76cd47619a7f5e2858371489c7699c48221806332ce2023a21afd6fa4f8e5f",
+      "reviewed": true,
+      "width": 2472,
+      "height": 2047
+    },
+    {
+      "path": "pdf-docs/estimate-1008.pdf",
+      "sha256": "a11bef381a6562b9148961e22868d228dc5e7cc968cf9768b1a1f19e90a662e7",
+      "reviewed": true,
+      "pages": 2,
+      "reviewed_pages": [
+        1,
+        2
+      ],
+      "page_size_points": [
+        612.0,
+        792.0
+      ]
+    },
+    {
+      "path": "pdf-docs/invoice-1007.pdf",
+      "sha256": "6b3bc14e9eda4a673e5cb75e34f18e98d4b5fd0db34ae8a3574f0eae0e139da7",
+      "reviewed": true,
+      "pages": 2,
+      "reviewed_pages": [
+        1,
+        2
+      ],
+      "page_size_points": [
+        612.0,
+        792.0
+      ]
+    }
+  ]
+}

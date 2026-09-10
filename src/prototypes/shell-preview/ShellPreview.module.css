@@ -1,0 +1,4 @@
+.placeholder { margin-top: 32px; }
+.placeholder > section { min-height: 180px; }
+.placeholder p { color: var(--cb-secondary); }
+.placeholder .caption { margin-top: 8px; color: var(--cb-muted); font-size: 13px; }
