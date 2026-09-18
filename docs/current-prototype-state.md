@@ -217,9 +217,10 @@ treatment. At $0 Contract Value, percentage milestones remain valid and
 project $0 while dollar entry is unavailable.
 
 The dedicated Retainage prototype owns the expanded release ledger: Total
-retained, Released, Held, Draft reserved, Available to release, and individual
-release invoices. Draft releases reserve capacity and become Released only at
-Draft → Open; at most one active release Draft exists.
+retained, Released, Held, Available to release, and individual release invoices.
+Draft releases show a Draft badge beside the invoice number rather than a separate
+summary metric. They still reserve capacity and become Released only at Draft →
+Open; at most one active release Draft exists.
 
 The first invoice still offers Standard or Progress Invoice. Choosing Standard
 with an active schedule confirms that the full Estimate will be converted and the

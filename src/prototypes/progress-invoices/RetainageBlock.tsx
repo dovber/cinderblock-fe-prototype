@@ -11,7 +11,7 @@ type Props = {
 }
 
 export function RetainageBlock({ withheld, releases, onCreate, onOpen }: Props) {
-  const { released, held, draftReserved, available } = retainageReleaseMetrics(withheld, releases)
+  const { released, held, available } = retainageReleaseMetrics(withheld, releases)
   const active = releases.filter(invoice => invoice.status !== 'Canceled')
   const draft = active.find(invoice => invoice.status === 'Draft')
   return <section className={s.block} aria-labelledby="retainage-heading">
@@ -20,9 +20,8 @@ export function RetainageBlock({ withheld, releases, onCreate, onOpen }: Props) 
       <div><dt>Total retained</dt><dd>{money(withheld)}</dd></div>
       <div><dt>Released</dt><dd>{money(released)}</dd></div>
       <div><dt>Held</dt><dd>{money(held)}</dd></div>
-      <div><dt>Draft reserved</dt><dd>{money(draftReserved)}</dd></div>
       <div><dt>Available to release</dt><dd>{money(available)}</dd></div>
     </dl>
-    {releases.length > 0 && <div className={s.history}><h3>Release invoices</h3>{releases.map(invoice => <button type="button" key={invoice.id} onClick={() => onOpen(invoice)}><span><strong>Invoice #{invoice.id}</strong><small>{money(invoice.amount)}</small></span><StatusBadge tone={invoice.status === 'Draft' || invoice.status === 'Canceled' ? 'neutral' : invoice.status === 'Open' ? 'pending' : 'success'}>{invoice.status}</StatusBadge></button>)}</div>}
+    {releases.length > 0 && <div className={s.history}><h3>Release invoices</h3>{releases.map(invoice => <button type="button" key={invoice.id} onClick={() => onOpen(invoice)}><span className={s.invoiceDetails}><span className={s.invoiceHeading}><strong>Invoice #{invoice.id}</strong><StatusBadge tone={invoice.status === 'Draft' || invoice.status === 'Canceled' ? 'neutral' : invoice.status === 'Open' ? 'pending' : 'success'}>{invoice.status}</StatusBadge></span><small>{money(invoice.amount)}</small></span></button>)}</div>}
   </section>
 }

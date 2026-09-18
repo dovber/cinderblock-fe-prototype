@@ -78,9 +78,10 @@ fifth milestone and is excluded from the milestone's Contract Value basis.
 ## Retainage block and contract history
 
 Only the dedicated Retainage prototype shows the expanded **Retainage** block.
-It lists every release invoice and tracks **Total retained**, **Released**,
-**Held**, **Draft reserved**, and **Available to release** separately from
-Contract value and Total invoiced:
+It lists every release invoice and presents **Total retained**, **Released**,
+**Held**, and **Available to release** evenly across the summary, separately from
+Contract value and Total invoiced. A Draft release invoice displays its status
+beside the invoice number; there is no separate Draft-reserved summary metric:
 
 `retainage held = total retained − retainage released`
 
@@ -88,7 +89,8 @@ Total retained is the cumulative retainage actually withheld across posted
 Progress Invoices. It is not calculated from the full contract value and does
 not decrease when retainage is released. Released increases when a Retainage
 release Draft becomes Open. A Draft reserves release capacity but does not count
-as Released or reduce Held. Available to release is Held less Draft reserved.
+as Released or reduce Held. Available to release is Held less the internally
+reserved Draft amount.
 
 A retainage release makes previously billed money due and never increases Total
 invoiced, line completion, or Payment Schedule consumption. The balance is held
