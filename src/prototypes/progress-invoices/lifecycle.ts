@@ -33,9 +33,11 @@ export const lifecycleScenarios = [
   ...contractScenarios.map(item => ({ id: `contract-${item.id}`, label: item.label })),
   ...scheduleScenarios.map(item => ({ id: `schedule-${item.id}`, label: `Payment schedule — ${item.label}` })),
 ]
-export type RegularScenarioId = 'regular-no-invoices' | 'regular-discount' | 'regular-progress' | 'regular-fully-invoiced' | 'regular-change-order' | 'regular-multiple-change-orders' | 'regular-fully-invoiced-change-orders' | 'regular-over-invoiced-change-order' | 'regular-payment-schedule' | 'regular-payment-schedule-draft' | 'regular-payment-schedule-progress' | 'regular-payment-schedule-over-allocated'
+export type RegularScenarioId = 'regular-no-invoices' | 'regular-tax' | 'regular-cost-plus' | 'regular-discount' | 'regular-progress' | 'regular-fully-invoiced' | 'regular-change-order' | 'regular-multiple-change-orders' | 'regular-fully-invoiced-change-orders' | 'regular-over-invoiced-change-order' | 'regular-payment-schedule' | 'regular-payment-schedule-draft' | 'regular-payment-schedule-progress' | 'regular-payment-schedule-over-allocated'
 export const regularScenarios: { id: RegularScenarioId; label: string }[] = [
   { id: 'regular-no-invoices', label: 'No invoices' },
+  { id: 'regular-tax', label: 'Estimate w/ tax' },
+  { id: 'regular-cost-plus', label: 'Estimate w/ cost plus' },
   { id: 'regular-discount', label: 'Estimate w/ discount' },
   { id: 'regular-progress', label: 'With progress invoice' },
   { id: 'regular-fully-invoiced', label: 'Fully invoiced' },
@@ -282,6 +284,14 @@ export function regularScenarioState(id: RegularScenarioId): LifecycleState {
     onAcceptance: 'nothing',
     acceptanceProcessed: true,
     notice: '',
+  }
+  if (id === 'regular-tax') {
+    state.taxRate = 7.5
+    state.original = state.original.map(line => ({ ...line, taxable: line.id !== 'drywall' }))
+  }
+  if (id === 'regular-cost-plus') {
+    state.costPlusPercent = 10
+    state.costPlusTaxable = false
   }
   if (id === 'regular-progress') state.invoices = [regularPostedInvoice(state, 25000, '100501')]
   if (id === 'regular-discount') state.discount = 10000

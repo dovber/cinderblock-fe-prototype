@@ -13,9 +13,13 @@ const date = (value: string) => new Intl.DateTimeFormat('en-US', { month: 'short
 
 function CustomerDocument({ invoice, estimateId, visibility, web }: Omit<Props, 'mode' | 'onClose'> & { web: boolean }) {
   const amounts = invoice.lines.map(line => number(line.price) * number(line.qty))
-  const subtotal = amounts.reduce((total, value) => total + value, 0)
+  const lineSubtotal = amounts.reduce((total, value) => total + value, 0)
+  const costPlusPercent = invoice.costPlusPercent ?? 0
+  const costPlus = lineSubtotal * costPlusPercent / 100
+  const subtotal = lineSubtotal + costPlus
   const discount = Math.min(number(invoice.discount), subtotal)
-  const tax = Math.max(0, subtotal - discount) * Math.min(100, number(invoice.taxRate)) / 100
+  const taxable = amounts.filter((_, index) => invoice.lines[index].taxable !== false).reduce((total, value) => total + value, 0)
+  const tax = Math.max(0, taxable - discount) * Math.min(100, number(invoice.taxRate)) / 100
   const total = subtotal - discount + tax
   return <article className={web ? s.webSheet : s.pdfSheet} aria-label={web ? 'Standard invoice customer web preview' : 'Standard invoice PDF-style preview'}>
     <header className={s.merchant}><div className={s.mark}><strong>DS</strong><span>DECKED IN SHADE</span></div><div><strong>Decked in Shade</strong><span>3511 West Commercial Boulevard</span><span>Fort Lauderdale, FL 33309</span><span>dov+decking@cinderblock.com</span><span>(786) 512-9336</span></div></header>
@@ -23,7 +27,7 @@ function CustomerDocument({ invoice, estimateId, visibility, web }: Omit<Props, 
     {web && <section className={s.banner}><div><strong>{money(total)}</strong><p>of {money(total)} total</p></div><div><button>Pay Now</button><span><LockKeyhole size={13}/>Secured by Stripe</span></div></section>}
     <section className={s.details}><div><span>CUSTOMER</span><strong>Standard Charter Customer</strong><p>4508 Worthington Drive, Eureka, CA 95503</p><span>JOB #1004</span><strong>Kitchen Installation</strong></div><div><span>DATE</span><strong>{date(invoice.invoiceDate)}</strong><span>DUE</span><strong>{date(invoice.dueDate)}</strong></div></section>
     <div className={s.tableWrap}><table><thead><tr><th>Item name</th>{visibility.price && <th>Price</th>}{visibility.qty && <th>Qty</th>}{visibility.amount && <th>Amount</th>}</tr></thead><tbody>{invoice.lines.map((line, index) => <tr key={line.id}><td><strong>{line.name}</strong>{line.description && <span>{line.description}</span>}</td>{visibility.price && <td>{money(number(line.price))}</td>}{visibility.qty && <td>{line.qty}</td>}{visibility.amount && <td>{money(amounts[index])}</td>}</tr>)}</tbody></table></div>
-    <dl className={s.totals}><div><dt>Subtotal</dt><dd>{money(subtotal)}</dd></div>{discount > 0 && <div><dt>Discount</dt><dd>−{money(discount)}</dd></div>}<div><dt>Tax ({number(invoice.taxRate)}%)</dt><dd>{money(tax)}</dd></div><div className={s.total}><dt>Total</dt><dd>{money(total)}</dd></div></dl>
+    <dl className={s.totals}><div><dt>Subtotal</dt><dd>{money(lineSubtotal)}</dd></div>{costPlusPercent > 0 && <><div><dt>Cost plus</dt><dd>{costPlusPercent}%</dd></div><div><dt>Cost plus fee</dt><dd>{money(costPlus)}</dd></div></>}{discount > 0 && <div><dt>Discount</dt><dd>−{money(discount)}</dd></div>}{number(invoice.taxRate) > 0 && <div><dt>Tax ({number(invoice.taxRate)}%)</dt><dd>{money(tax)}</dd></div>}<div className={s.total}><dt>Total</dt><dd>{money(total)}</dd></div></dl>
     <section className={s.note}><h2>NOTE</h2><p>{invoice.note}</p></section>
     <section className={s.note}><h2>TERMS &amp; CONDITIONS</h2><p>{invoice.terms}</p></section>
   </article>

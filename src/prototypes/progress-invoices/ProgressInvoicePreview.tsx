@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Download, FileText, Link2, LockKeyhole, Printer, X } from 'lucide-react'
-import { buildInvoiceAllocationFacts, completion, invoiceMilestoneName, invoiceTaxFromAllocations, money, percent, rounded, sum, type EstimateLine, type InvoiceColumnVisibility, type ProgressInvoice } from './model'
+import { buildInvoiceAllocationFacts, completion, invoiceCostPlusAllocation, invoiceMilestoneName, invoiceTaxFromAllocations, money, percent, rounded, sum, type EstimateLine, type InvoiceColumnVisibility, type ProgressInvoice } from './model'
 import { acquireTopSurface, EmptyValue } from '../../shared/ui'
 import s from './ProgressInvoicePreview.module.css'
 
@@ -79,14 +79,16 @@ function InvoiceTotals({ invoice, lines, compact = false, retainageEnabled = fal
   const retainage = retainageEnabled ? rounded(retainageBase * (invoice.retainagePercent ?? 0) / 100) : 0
   const tax = invoiceTaxFromAllocations(invoice.allocationFacts ?? buildInvoiceAllocationFacts(lines, invoice.lineAmounts, invoice.discount, invoice.taxRate))
   const taxCredit = Math.min(invoice.taxCreditApplied ?? 0, tax)
+  const costPlus = invoiceCostPlusAllocation(lines, invoice.lineAmounts)
   const total = invoiceTotal(invoice, lines, retainageEnabled)
   const paid = invoice.status === 'Paid' ? total : invoice.status === 'Partially paid' ? rounded(total * .25) : 0
   const balance = rounded(total - paid)
   return <dl className={`${s.previewTotals} ${compact ? s.compactTotals : ''}`}>
     <div><dt>{retainageEnabled ? 'Subtotal billed' : 'Subtotal'}</dt><dd>{money(subtotal)}</dd></div>
+    {invoice.costPlus > 0 && <><div><dt>Cost plus</dt><dd>{percent(invoice.costPlus)}</dd></div><div><dt>Cost plus fee</dt><dd>{money(costPlus)}</dd></div></>}
     {invoice.discount > 0 && <div><dt>Discount</dt><dd>−{money(invoice.discount)}</dd></div>}
     {retainageEnabled && (invoice.retainagePercent ?? 0) > 0 && <div><dt>Retainage ({invoice.retainagePercent}%)</dt><dd>−{money(retainage)}</dd></div>}
-    <div><dt>Tax ({invoice.taxRate}%)</dt><dd>{money(tax)}</dd></div>
+    {invoice.taxRate > 0 && <div><dt>Tax ({invoice.taxRate}%)</dt><dd>{money(tax)}</dd></div>}
     {taxCredit > 0 && <div><dt>Tax credit balance</dt><dd>−{money(taxCredit)}</dd></div>}
     <div className={s.previewTotal}><dt>{retainageEnabled ? 'Total due' : 'Total'}</dt><dd>{money(total)}</dd></div>
     {paid > 0 && <div className={s.paid}><dt>Amount paid</dt><dd>−{money(paid)}</dd></div>}

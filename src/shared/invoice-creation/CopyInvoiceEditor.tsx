@@ -7,8 +7,8 @@ import { StandardInvoicePreview, type StandardPreviewMode } from './StandardInvo
 import { addedLineFixture } from './addedLineFixtures'
 import s from './ProgressInvoices.module.css'
 
-type NormalLine = { id: string; name: string; description: string; price: string; qty: string }
-export type StandardInvoiceSourceLine = { id: string; name: string; qty: number; contract: number }
+type NormalLine = { id: string; name: string; description: string; price: string; qty: string; taxable?: boolean }
+export type StandardInvoiceSourceLine = { id: string; name: string; qty: number; contract: number; taxable?: boolean }
 export type StandardInvoice = {
   id: string
   lines: NormalLine[]
@@ -16,6 +16,7 @@ export type StandardInvoice = {
   dueDate: string
   discount: string
   taxRate: string
+  costPlusPercent?: number
   note: string
   terms: string
   showSku: boolean
@@ -23,7 +24,7 @@ export type StandardInvoice = {
   customerVisibility?: StandardCustomerVisibility
 }
 export type StandardCustomerVisibility = { price: boolean; qty: boolean; amount: boolean }
-type Props = { sourceLines: StandardInvoiceSourceLine[]; estimateId?: string; invoice?: StandardInvoice; defaultDiscount?: string; defaultTaxRate?: string; onClose: () => void; onSave: (invoice: StandardInvoice) => void }
+type Props = { sourceLines: StandardInvoiceSourceLine[]; estimateId?: string; invoice?: StandardInvoice; defaultDiscount?: string; defaultTaxRate?: string; costPlusPercent?: number; onClose: () => void; onSave: (invoice: StandardInvoice) => void }
 
 const rounded = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100
 const sum = (values: number[]) => rounded(values.reduce((total, value) => total + value, 0))
@@ -37,16 +38,16 @@ const sections = [
 ]
 
 function copiedLines(sourceLines: StandardInvoiceSourceLine[]): NormalLine[] {
-  return sourceLines.map(line => ({ id: line.id, name: line.name, description: '', price: (line.contract / line.qty).toFixed(2), qty: String(line.qty) }))
+  return sourceLines.map(line => ({ id: line.id, name: line.name, description: '', price: (line.contract / line.qty).toFixed(2), qty: String(line.qty), taxable: line.taxable }))
 }
 
-export function CopyInvoiceEditor({ sourceLines, estimateId = '1008', invoice, defaultDiscount = '0', defaultTaxRate = '7', onClose, onSave }: Props) {
+export function CopyInvoiceEditor({ sourceLines, estimateId = '1008', invoice, defaultDiscount = '0', defaultTaxRate = '0', costPlusPercent = 0, onClose, onSave }: Props) {
   const defaultCustomerVisibility: StandardCustomerVisibility = { price: true, qty: true, amount: true }
   const [lines, setLines] = useState(() => invoice ? invoice.lines.map(line => ({ ...line })) : copiedLines(sourceLines))
   const [invoiceDate, setInvoiceDate] = useState(invoice?.invoiceDate ?? '2026-09-10')
   const [dueDate, setDueDate] = useState(invoice?.dueDate ?? '2026-10-10')
   const [discount, setDiscount] = useState(invoice?.discount ?? defaultDiscount)
-  const [taxRate, setTaxRate] = useState(invoice?.taxRate ?? defaultTaxRate)
+  const [taxRate] = useState(invoice?.taxRate ?? defaultTaxRate)
   const [note, setNote] = useState(invoice?.note ?? 'Thank you for your business.')
   const [terms, setTerms] = useState(invoice?.terms ?? 'Payment is due on the date shown on this invoice.')
   const showSku = invoice?.showSku ?? false
@@ -61,14 +62,17 @@ export function CopyInvoiceEditor({ sourceLines, estimateId = '1008', invoice, d
   const closeRef = useRef(onClose)
   useEffect(() => { closeRef.current = onClose }, [onClose])
   const amounts = lines.map(line => rounded((Number.isFinite(parseAmount(line.price)) ? parseAmount(line.price) : 0) * (Number.isFinite(parseAmount(line.qty)) ? parseAmount(line.qty) : 0)))
-  const subtotal = rounded(sum(amounts))
+  const lineSubtotal = rounded(sum(amounts))
+  const effectiveCostPlusPercent = invoice?.costPlusPercent ?? costPlusPercent
+  const costPlus = rounded(lineSubtotal * effectiveCostPlusPercent / 100)
+  const subtotal = rounded(lineSubtotal + costPlus)
   const discountAmount = Number.isFinite(parseAmount(discount)) ? Math.min(parseAmount(discount), subtotal) : 0
-  const taxable = Math.max(0, subtotal - discountAmount)
+  const taxable = Math.max(0, sum(amounts.filter((_, index) => lines[index].taxable !== false)) - discountAmount)
   const taxPercent = Number.isFinite(parseAmount(taxRate)) ? Math.min(parseAmount(taxRate), 100) : 0
   const tax = rounded(taxable * taxPercent / 100)
-  const total = rounded(taxable + tax)
+  const total = rounded(subtotal - discountAmount + tax)
   const valid = lines.length > 0 && lines.every(line => line.name.trim() && Number.isFinite(parseAmount(line.price)) && Number.isFinite(parseAmount(line.qty))) && !!invoiceDate && !!dueDate && dueDate >= invoiceDate
-  const currentInvoice = (): StandardInvoice => ({ id: invoice?.id ?? '100501', lines: lines.map(line => ({ ...line })), invoiceDate, dueDate, discount, taxRate, note, terms, showSku, showCode, customerVisibility })
+  const currentInvoice = (): StandardInvoice => ({ id: invoice?.id ?? '100501', lines: lines.map(line => ({ ...line })), invoiceDate, dueDate, discount, taxRate, costPlusPercent: effectiveCostPlusPercent, note, terms, showSku, showCode, customerVisibility })
   const dirty = invoice ? JSON.stringify(currentInvoice()) !== savedSignature : false
 
   useEffect(() => {
@@ -122,7 +126,7 @@ export function CopyInvoiceEditor({ sourceLines, estimateId = '1008', invoice, d
             <div className={s.tableOverflow}><table className={`${s.editorTable} ${s.standardEditorTable}`}><caption className={s.srOnly}>Copied invoice line items</caption><thead><tr><th className={s.rowNumber}/><th>Item name</th><th className={s.numeric}>Price</th><th className={s.numeric}>Qty</th><th className={s.numeric}>Amount</th><th className={s.menuColumn}/></tr></thead>
               <tbody>{lines.map((line, index) => <tr key={line.id}><td className={s.rowNumber}>{index + 1}</td><td className={s.standardItemName}><input aria-label={`Item name for line ${index + 1}`} value={line.name} onChange={event => updateLine(line.id, { name: event.target.value })}/><LineItemDescription description={line.description} className={s.standardItemDescription}/>{showSku && <small>SKU</small>}{showCode && <small>Item code</small>}</td><td><div className={s.moneyInput}><span>$</span><input aria-label={`Price for ${line.name}`} inputMode="decimal" value={line.price} onChange={event => updateLine(line.id, { price: event.target.value })}/></div></td><td><input className={s.quantityInput} aria-label={`Quantity for ${line.name}`} inputMode="decimal" value={line.qty} onChange={event => updateLine(line.id, { qty: event.target.value })}/></td><td className={s.numeric}>{money(amounts[index])}</td><td><IconButton label={`Remove ${line.name}`} onClick={() => setLines(current => current.filter(item => item.id !== line.id))}><Trash2 size={16}/></IconButton></td></tr>)}</tbody>
             </table></div>
-            <div className={s.standardInvoiceFooter}><div className={s.lineActions}><Button variant="secondary" icon={<Plus size={16}/>} onClick={addLine}>Add item</Button></div><dl className={s.invoiceTotals}><div><dt>Subtotal</dt><dd>{money(subtotal)}</dd></div><div><dt><label htmlFor="standard-discount">Discount</label></dt><dd><div className={s.adjustment}><span>$</span><input id="standard-discount" inputMode="decimal" value={discount} onChange={event => setDiscount(event.target.value)}/></div></dd></div><div><dt><label htmlFor="standard-tax">Sales tax</label><div className={`${s.adjustment} ${s.taxInput}`}><input id="standard-tax" inputMode="decimal" value={taxRate} onChange={event => setTaxRate(event.target.value)}/><span>%</span></div></dt><dd>{money(tax)}</dd></div><div className={s.total}><dt>Total</dt><dd>{money(total)}</dd></div></dl></div>
+            <div className={s.standardInvoiceFooter}><div className={s.lineActions}><Button variant="secondary" icon={<Plus size={16}/>} onClick={addLine}>Add item</Button></div><dl className={s.invoiceTotals}><div><dt>Subtotal</dt><dd>{money(lineSubtotal)}</dd></div>{effectiveCostPlusPercent > 0 && <><div><dt>Cost plus</dt><dd>{effectiveCostPlusPercent}%</dd></div><div><dt>Cost plus fee</dt><dd>{money(costPlus)}</dd></div></>}{discountAmount > 0 && <div><dt><label htmlFor="standard-discount">Discount</label></dt><dd><div className={s.adjustment}><span>$</span><input id="standard-discount" inputMode="decimal" value={discount} onChange={event => setDiscount(event.target.value)}/></div></dd></div>}{taxPercent > 0 && <div><dt><label htmlFor="standard-tax">Sales tax</label><div className={`${s.adjustment} ${s.taxInput}`} title="Inherited from the accepted Estimate"><input id="standard-tax" inputMode="decimal" value={taxRate} disabled/><span>%</span></div></dt><dd>{money(tax)}</dd></div>}<div className={s.total}><dt>Total</dt><dd>{money(total)}</dd></div></dl></div>
           </section>
           <section id="standard-invoice-note" className={s.textCard}><h2>Public note</h2><textarea aria-label="Public note" rows={3} value={note} onChange={event => setNote(event.target.value)}/></section>
           <section id="standard-invoice-payments" className={s.textCard}><h2>Payments</h2><p className={s.muted}>No payments recorded.</p></section>

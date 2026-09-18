@@ -294,21 +294,21 @@ export function InvoiceEditor({ contractValue, contractPreviouslyBilled, lines, 
 
             <div className={s.totalsArea}><dl className={s.invoiceTotals}>
 
-              <div><dt>Cost plus</dt><dd>{percent(feePercent)}</dd></div>
+              {feePercent > 0 && <><div><dt>Cost plus</dt><dd>{percent(feePercent)}</dd></div>
 
-              <div><dt>Cost plus fee</dt><dd>{money(fee)}</dd></div>
+              <div><dt>Cost plus fee</dt><dd>{money(fee)}</dd></div></>}
 
               <div><dt>{retainageEnabled ? 'Subtotal billed' : 'Subtotal'} <Info size={13} aria-label="Line amounts including allocated Cost Plus scope"/></dt><dd>{money(subtotal)}</dd></div>
 
-              <div><dt><label htmlFor="discount">Discount</label></dt><dd><div className={s.adjustment}><span>$</span><input id="discount" inputMode="decimal" value={discount} disabled={locked} aria-invalid={!!discountError} onChange={event => setDiscount(event.target.value)}/></div>{discountError && <small className={s.error}>{discountError}</small>}</dd></div>
+              {(discountLimit !== undefined || invoice.discount > 0) && <div><dt><label htmlFor="discount">Discount</label></dt><dd><div className={s.adjustment}><span>$</span><input id="discount" inputMode="decimal" value={discount} disabled={locked} aria-invalid={!!discountError} onChange={event => setDiscount(event.target.value)}/></div>{discountError && <small className={s.error}>{discountError}</small>}</dd></div>}
 
               {retainageEnabled && <div><dt><label htmlFor="retainage-rate">Retainage</label></dt><dd><div className={s.adjustment}><span>%</span><input id="retainage-rate" inputMode="decimal" aria-label="Retainage percentage" value={retainagePercent} disabled={locked} aria-invalid={!!retainageError} onChange={event => setRetainagePercent(event.target.value)}/></div>{retainageError && <small className={s.error}>{retainageError}</small>}</dd></div>}
 
               {retainageEnabled && <div><dt>Retainage amount</dt><dd>−{money(retainage)}</dd></div>}
 
-              <div><dt><label htmlFor="tax-rate">Sales tax</label><div className={`${s.adjustment} ${s.taxInput}`} title="Inherited from the accepted Estimate or contract"><input id="tax-rate" inputMode="decimal" aria-label="Sales tax percentage inherited from the accepted Estimate or contract" value={taxRate} disabled aria-invalid={!!taxError} onChange={event => setTaxRate(event.target.value)}/><span>%</span></div></dt><dd>{money(tax)}</dd></div>
+              {invoice.taxRate > 0 && <div><dt><label htmlFor="tax-rate">Sales tax</label><div className={`${s.adjustment} ${s.taxInput}`} title="Inherited from the accepted Estimate or contract"><input id="tax-rate" inputMode="decimal" aria-label="Sales tax percentage inherited from the accepted Estimate or contract" value={taxRate} disabled aria-invalid={!!taxError} onChange={event => setTaxRate(event.target.value)}/><span>%</span></div></dt><dd>{money(tax)}</dd></div>}
 
-              {taxError && <div className={s.error}>{taxError}</div>}
+              {invoice.taxRate > 0 && taxError && <div className={s.error}>{taxError}</div>}
 
               {taxCredit > 0 && <div><dt>Tax credit balance</dt><dd>−{money(taxCredit)}</dd></div>}
 

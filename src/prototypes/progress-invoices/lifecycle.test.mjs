@@ -85,6 +85,37 @@ test('contract-derived invoice flows inherit the source contract tax rate', () =
   assert.equal(retainedDraft.taxRate, 8)
   assert.equal(sum(retainedDraft.allocationFacts.map(fact => fact.taxCharged + fact.taxOnCostPlus)), 80)
 })
+test('tax, Cost Plus, and discount are isolated to their dedicated regular scenarios', () => {
+  const tax = regularScenarioState('regular-tax')
+  const costPlus = regularScenarioState('regular-cost-plus')
+  const discount = regularScenarioState('regular-discount')
+  const baselineIds = regularScenarios.map(scenario => scenario.id).filter(id => !['regular-tax', 'regular-cost-plus', 'regular-discount'].includes(id))
+
+  assert.equal(tax.taxRate, 7.5)
+  assert.equal(tax.costPlusPercent, 0)
+  assert.equal(tax.discount, 0)
+  assert.deepEqual(tax.original.map(line => line.taxable), [true, false, true])
+  const taxDraft = draftInvoice(tax, billingLines(tax), [30000, 30000, 40000])
+  assert.equal(sum(taxDraft.allocationFacts.map(fact => fact.taxCharged + fact.taxOnCostPlus)), 5250)
+
+  assert.equal(costPlus.taxRate, 0)
+  assert.equal(costPlus.costPlusPercent, 10)
+  assert.equal(costPlus.discount, 0)
+  assert.equal(grossContractScope(costPlus), 110000)
+  const costPlusDraft = draftInvoice(costPlus, billingLines(costPlus), [12000, 8000, 10000, 0, 0, 0])
+  assert.deepEqual(costPlusDraft.lineAmounts, [12000, 8000, 10000, 1200, 800, 1000])
+
+  assert.equal(discount.taxRate, 0)
+  assert.equal(discount.costPlusPercent, 0)
+  assert.equal(discount.discount, 10000)
+
+  for (const id of baselineIds) {
+    const state = regularScenarioState(id)
+    assert.equal(state.taxRate, 0, `${id} leaked tax`)
+    assert.equal(state.costPlusPercent, 0, `${id} leaked Cost Plus`)
+    assert.equal(state.discount, 0, `${id} leaked discount`)
+  }
+})
 test('discount scenario separates gross progress, net invoicing, and draft reservation', () => {
   let state = regularScenarioState('regular-discount')
   assert.equal(grossContractScope(state), 100000)

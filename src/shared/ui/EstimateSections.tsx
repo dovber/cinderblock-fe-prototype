@@ -6,7 +6,7 @@ import s from './EstimateSections.module.css'
 
 const money = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
 const percent = (value: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(value) + '%'
-type EstimateItem = { id: string; name: string; qty: number; contract: number }
+type EstimateItem = { id: string; name: string; qty: number; contract: number; taxable?: boolean }
 
 export function EstimateDetailsSection({ status, linkedInvoices = [], actions, children }: { status: string; linkedInvoices?: { id: string; onOpen: () => void }[]; actions?: ReactNode; children?: ReactNode }) {
   return (
@@ -28,8 +28,13 @@ export function EstimateDetailsSection({ status, linkedInvoices = [], actions, c
   )
 }
 
-export function EstimateItemsSection({ lines, draftByLine = [], estimateLocked = false, estimateLockReason, estimateDiscount = 0, contractDiscountPool = estimateDiscount, discountUsed = 0, discountReserved = 0, lineContext }: { lines: EstimateItem[]; lineContext?: (line: EstimateItem) => ReactNode; draftByLine?: number[]; estimateLocked?: boolean; estimateLockReason?: string; estimateDiscount?: number; contractDiscountPool?: number; discountUsed?: number; discountReserved?: number }) {
+export function EstimateItemsSection({ lines, draftByLine = [], estimateLocked = false, estimateLockReason, estimateDiscount = 0, contractDiscountPool = estimateDiscount, discountUsed = 0, discountReserved = 0, taxRate = 0, costPlusPercent = 0, costPlusTaxable = false, lineContext }: { lines: EstimateItem[]; lineContext?: (line: EstimateItem) => ReactNode; draftByLine?: number[]; estimateLocked?: boolean; estimateLockReason?: string; estimateDiscount?: number; contractDiscountPool?: number; discountUsed?: number; discountReserved?: number; taxRate?: number; costPlusPercent?: number; costPlusTaxable?: boolean }) {
   const contract = lines.reduce((total, line) => total + line.contract, 0)
+  const costPlus = contract * costPlusPercent / 100
+  const subtotal = contract + costPlus
+  const taxableBase = lines.filter(line => line.taxable !== false).reduce((total, line) => total + line.contract, 0) + (costPlusTaxable ? costPlus : 0)
+  const tax = taxableBase * taxRate / 100
+  const total = subtotal - estimateDiscount + tax
   const lineCost = contract * .7
   return (
 <section className={s.estimateItemCard} aria-label="Estimate items" data-locked={estimateLocked || undefined}>
@@ -37,7 +42,7 @@ export function EstimateItemsSection({ lines, draftByLine = [], estimateLocked =
               <tbody>{lines.map((line, index) => <tr key={line.id}><td className={s.rowNumber}>{index + 1}</td><td className={s.estimateItemName}><strong>{line.name}{estimateLocked && estimateLockReason && <LineItemLockIndicator reason={estimateLockReason}/>}</strong><span>Add description</span>{lineContext?.(line)}{draftByLine[index] > 0 && <small>{money(draftByLine[index])} reserved by draft</small>}</td><td className={s.numeric}>{money(line.contract / line.qty)}</td><td className={s.numeric}>{line.qty}</td><td className={s.numeric}>{money(line.contract)}</td><td/></tr>)}</tbody>
             </table></div>
             <div className={s.estimateItemFooter}><div className={s.lineActions}/>
-              <dl className={s.normalEstimateTotals}><div><dt>Subtotal</dt><dd>{money(contract)}</dd></div><div><dt>Discount</dt><dd>{estimateDiscount > 0 ? `−${money(estimateDiscount)}` : money(0)}</dd></div>{contractDiscountPool > 0 && (contractDiscountPool !== estimateDiscount || discountUsed > 0 || discountReserved > 0) && <>{contractDiscountPool !== estimateDiscount && <div className={s.discountPoolNote}><dt>Contract discount pool</dt><dd>{money(contractDiscountPool)}</dd></div>}<div className={s.discountPoolNote}><dt>Discount consumed</dt><dd>{money(discountUsed)}</dd></div>{discountReserved > 0 && <div className={s.discountPoolNote}><dt>Reserved by Draft</dt><dd>{money(discountReserved)}</dd></div>}<div className={s.discountPoolNote}><dt>Discount available</dt><dd>{money(Math.max(0, contractDiscountPool - discountUsed - discountReserved))}</dd></div></>}<div><dt>Tax (0%)</dt><dd>{money(0)}</dd></div><div className={s.total}><dt>Total</dt><dd>{money(contract - estimateDiscount)}</dd></div><div className={s.costDivider}><dt>Line items cost</dt><dd>{money(lineCost)}</dd></div><div><dt>Line items total</dt><dd>{money(contract)}</dd></div><div><dt>Discount</dt><dd>{estimateDiscount > 0 ? `−${money(estimateDiscount)}` : money(0)}</dd></div><div><dt>Gross margin</dt><dd>{percent((contract - estimateDiscount - lineCost) / (contract - estimateDiscount) * 100)}</dd></div><div><dt>Gross profit</dt><dd>{money(contract - estimateDiscount - lineCost)}</dd></div></dl>
+              <dl className={s.normalEstimateTotals}><div><dt>Subtotal</dt><dd>{money(contract)}</dd></div>{costPlusPercent > 0 && <><div><dt>Cost plus</dt><dd>{percent(costPlusPercent)}</dd></div><div><dt>Cost plus fee</dt><dd>{money(costPlus)}</dd></div></>}{estimateDiscount > 0 && <div><dt>Discount</dt><dd>−{money(estimateDiscount)}</dd></div>}{contractDiscountPool > 0 && (contractDiscountPool !== estimateDiscount || discountUsed > 0 || discountReserved > 0) && <>{contractDiscountPool !== estimateDiscount && <div className={s.discountPoolNote}><dt>Contract discount pool</dt><dd>{money(contractDiscountPool)}</dd></div>}<div className={s.discountPoolNote}><dt>Discount consumed</dt><dd>{money(discountUsed)}</dd></div>{discountReserved > 0 && <div className={s.discountPoolNote}><dt>Reserved by Draft</dt><dd>{money(discountReserved)}</dd></div>}<div className={s.discountPoolNote}><dt>Discount available</dt><dd>{money(Math.max(0, contractDiscountPool - discountUsed - discountReserved))}</dd></div></>}{taxRate > 0 && <div><dt>Sales tax ({percent(taxRate)})</dt><dd>{money(tax)}</dd></div>}<div className={s.total}><dt>Total</dt><dd>{money(total)}</dd></div><div className={s.costDivider}><dt>Line items cost</dt><dd>{money(lineCost)}</dd></div><div><dt>Line items total</dt><dd>{money(contract)}</dd></div>{costPlusPercent > 0 && <div><dt>Cost plus fee</dt><dd>{money(costPlus)}</dd></div>}{estimateDiscount > 0 && <div><dt>Discount</dt><dd>−{money(estimateDiscount)}</dd></div>}<div><dt>Gross margin</dt><dd>{percent((subtotal - estimateDiscount - lineCost) / (subtotal - estimateDiscount) * 100)}</dd></div><div><dt>Gross profit</dt><dd>{money(subtotal - estimateDiscount - lineCost)}</dd></div></dl>
             </div>
           </section>
   )
