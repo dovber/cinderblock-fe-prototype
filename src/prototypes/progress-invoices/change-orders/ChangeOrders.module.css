@@ -102,7 +102,7 @@
 .editorTitle p { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--cb-secondary); margin-top: 3px; }
 .closeEditor { display: flex; align-items: center; justify-content: center; padding: 4px; border: 0; background: none; color: var(--cb-secondary); }
 .jobMarker { display: inline-block; width: 14px; height: 14px; border-radius: 2px; background: #c7772b; flex-shrink: 0; }
-.saveActions { display: flex; align-items: center; gap: 16px; }
+.saveActions, .previewActions { display: flex; align-items: center; gap: 16px; }
 .headerOverflow { position: relative; display: flex; }
 .overflowMenu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 4; min-width: 210px; padding: 6px; border: 1px solid var(--cb-border); border-radius: 6px; background: white; box-shadow: 0 12px 30px #1419251f; }
 .overflowMenu button { width: 100%; padding: 9px 10px; border: 0; border-radius: 4px; background: transparent; color: var(--cb-text); text-align: left; font-size: 13px; }

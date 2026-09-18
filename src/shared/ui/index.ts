@@ -6,6 +6,8 @@ export { LineItemLockIndicator } from './LineItemLockIndicator'
 
 export { EstimateDetailsSection, EstimateItemsSection, EstimateRetainageSetting } from './EstimateSections'
 export { EstimateSurface, EstimateTextSection } from './EstimateSurface'
+export { EstimateDocumentPreview } from './EstimateDocumentPreview'
+export type { EstimateDocumentPreviewMode, EstimateFamilyDocument } from './EstimateDocumentPreview'
 export { PaymentScheduleCard } from './PaymentScheduleCard'
 export type { PaymentScheduleCardMilestone } from './PaymentScheduleCard'
 export { PaymentScheduleAllocationWarning } from './PaymentScheduleAllocationWarning'

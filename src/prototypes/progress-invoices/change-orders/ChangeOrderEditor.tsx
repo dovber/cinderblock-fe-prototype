@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { CalendarDays, ChevronDown, FilePlus2, Link2, MoreVertical, Plus, X } from 'lucide-react'
+import { CalendarDays, ChevronDown, ExternalLink, FilePlus2, FileText, Link2, MoreVertical, Plus, X } from 'lucide-react'
 import { addedLineFixture } from '../../../shared/invoice-creation/addedLineFixtures'
-import { acquireTopSurface, Button, ContractSummary, EmptyValue, IconButton, LineItemLockIndicator, StatusBadge } from '../../../shared/ui'
+import { acquireTopSurface, Button, ContractSummary, EmptyValue, EstimateDocumentPreview, IconButton, LineItemLockIndicator, StatusBadge, type EstimateDocumentPreviewMode } from '../../../shared/ui'
 import { ContractDetails } from './ContractDetails'
 import { ReplaceIcon } from './ReplaceIcon'
 import type { ContractInvoice } from '../lifecycle'
@@ -80,6 +80,7 @@ export function ChangeOrderEditor({ notice, originalContractValue, contractValue
   const [overflowOpen, setOverflowOpen] = useState(false)
   const [statusMenuOpen, setStatusMenuOpen] = useState(false)
   const [lifecycleAction, setLifecycleAction] = useState(false)
+  const [previewMode, setPreviewMode] = useState<EstimateDocumentPreviewMode | null>(null)
   const [discountInput, setDiscountInput] = useState(() => String(order.discount))
   const lineSubtotal = changeOrderLineSubtotal(order)
   const costPlus = changeOrderCostPlus(order)
@@ -100,6 +101,27 @@ export function ChangeOrderEditor({ notice, originalContractValue, contractValue
   const hasEditableLine = order.lines.some(line => !line.sourceEstimateLineId && !line.sourceChangeOrderLineId)
   const openAdjustment = openChangeOrderAdjustment(openOrder)
   const noticeIsError = notice?.startsWith('This Change Order cannot') || notice?.startsWith('This discount adjustment')
+  const previewDocument = {
+    type: 'Change Order' as const,
+    number: order.id,
+    linkedEstimateId: estimateId,
+    status: order.status,
+    date: '2026-09-11T12:00:00',
+    poNumber: order.poNumber || undefined,
+    customerReference: order.customerReference || undefined,
+    items: order.lines.map(line => ({ id: line.id, name: line.name, description: line.description, price: line.price, qty: line.qty, amount: amount(line) })),
+    subtotal: lineSubtotal,
+    discount: order.discount,
+    costPlusPercent: order.costPlusPercent,
+    costPlusFee: costPlus,
+    total,
+    publicNote: order.publicNote,
+    attachments: [],
+    terms: order.terms,
+    acceptedAt: order.acceptedAt,
+    acceptedBy: order.acceptedBy,
+    version: order.version,
+  }
 
   const updateLine = (lineId: string, patch: Partial<AdjustmentLine>) => {
     onChange({ ...order, lines: order.lines.map(line => line.id === lineId ? { ...line, ...patch } : line) })
@@ -163,7 +185,7 @@ export function ChangeOrderEditor({ notice, originalContractValue, contractValue
   return createPortal(<div ref={surface} className={s.editor} role="main" aria-label="Change Order editor" tabIndex={-1}>
     <header className={s.editorHeader}>
       <div className={s.editorTitle}><button ref={closeButton} className={s.closeEditor} aria-label="Close Change Order" onClick={onClose}><X size={22}/></button><div><h1>Change Order #{order.id}</h1><p>Estimate #{estimateId} · Job #1004 Kitchen Installation</p></div></div>
-      <div className={s.saveActions}>{isPersisted && order.status === 'Draft' && <Button variant="secondary" disabled={!canPersist || dirty} title={dirty ? 'Save changes before sending this Change Order' : undefined} onClick={sendChangeOrder}>Send Change Order</Button>}{!closed && order.status !== 'Accepted' && (!isPersisted || dirty) && <Button disabled={!canPersist || (isPersisted && !dirty)} onClick={saveChanges}>{isPersisted ? 'Save changes' : 'Save Change Order'}</Button>}{lifecycleMenuAction && <div ref={overflow} className={s.headerOverflow}><IconButton label="More Change Order actions" aria-haspopup="menu" aria-expanded={overflowOpen} onClick={() => setOverflowOpen(open => !open)}><MoreVertical size={20}/></IconButton>{overflowOpen && <div className={s.overflowMenu} role="menu"><button role="menuitem" onClick={() => { setOverflowOpen(false); setLifecycleAction(true) }}>{lifecycleMenuAction.label}</button></div>}</div>}</div>
+      <div className={s.saveActions}>{isPersisted && <div className={s.previewActions}><Button variant="secondary" icon={<FileText size={16}/>} onClick={() => setPreviewMode('pdf')}>PDF preview</Button><Button variant="secondary" icon={<ExternalLink size={16}/>} onClick={() => setPreviewMode('web')}>Customer web preview</Button></div>}{isPersisted && order.status === 'Draft' && <Button variant="secondary" disabled={!canPersist || dirty} title={dirty ? 'Save changes before sending this Change Order' : undefined} onClick={sendChangeOrder}>Send Change Order</Button>}{!closed && order.status !== 'Accepted' && (!isPersisted || dirty) && <Button disabled={!canPersist || (isPersisted && !dirty)} onClick={saveChanges}>{isPersisted ? 'Save changes' : 'Save Change Order'}</Button>}{lifecycleMenuAction && <div ref={overflow} className={s.headerOverflow}><IconButton label="More Change Order actions" aria-haspopup="menu" aria-expanded={overflowOpen} onClick={() => setOverflowOpen(open => !open)}><MoreVertical size={20}/></IconButton>{overflowOpen && <div className={s.overflowMenu} role="menu"><button role="menuitem" onClick={() => { setOverflowOpen(false); setLifecycleAction(true) }}>{lifecycleMenuAction.label}</button></div>}</div>}</div>
     </header>
     <div className={`${s.editorLayout} ${s.noRail}`}>
       <main className={s.editorMain}>
@@ -227,6 +249,7 @@ export function ChangeOrderEditor({ notice, originalContractValue, contractValue
         </div>
       </main>
     </div>
+    {previewMode && <EstimateDocumentPreview mode={previewMode} document={previewDocument} onClose={() => setPreviewMode(null)}/>}
     {lifecycleAction && <LifecycleConfirmation onClose={() => setLifecycleAction(false)} onConfirm={() => { setLifecycleAction(false); onDelete() }}/>} 
   </div>, document.body)
 }
