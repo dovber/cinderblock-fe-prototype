@@ -1,0 +1,22 @@
+.warning {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 18px;
+  padding: 12px 14px;
+  border: 1px solid #e1aaaa;
+  border-radius: 6px;
+  background: #fff8f8;
+  font-size: 13px;
+}
+
+.warning h3 {
+  grid-column: 1 / -1;
+  margin: 0 0 4px;
+  color: #a52f2f;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.warning strong { color: #a52f2f; }
+.warning > span { color: var(--cb-secondary); font-variant-numeric: tabular-nums; }
+.warning small { grid-column: 1 / -1; color: #b23b3b; }

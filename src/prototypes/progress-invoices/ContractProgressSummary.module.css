@@ -1,0 +1,7 @@
+.summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--cb-border); border-radius: 6px; background: var(--cb-surface); }
+.summary span { display: block; font-size: 12px; color: var(--cb-secondary); margin-bottom: 6px; }
+.summary strong { font-size: 16px; font-weight: 600; }
+.bar { grid-column: 1 / -1; }
+.overProgress { display: flex; height: 6px; border-radius: 3px; overflow: hidden; }
+.overProgress i:first-child { background: var(--cb-success); }
+.overProgress i:last-child { background: #cb5d54; }

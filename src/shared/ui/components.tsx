@@ -31,8 +31,33 @@ export function Avatar({ name, size = 'normal' }: { name: string; size?: 'small'
 export function Tag({ children, tone = 'teal', onRemove }: { children: ReactNode; tone?: 'teal' | 'red'; onRemove?: () => void }) {
   return <span className={`${s.tag} ${s[`tag_${tone}`]}`}>{children}{onRemove && <button type="button" onClick={onRemove} aria-label={`Remove ${children}`}><X size={13} /></button>}</span>
 }
-export function ProgressBar({ value, label }: { value: number; label: string }) {
-  return <div className={s.progress} role="progressbar" aria-label={label} aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${Math.max(0, Math.min(100, value))}%` }} /></div>
+export function ProgressBar({ value, label, overage = 0 }: { value: number; label: string; overage?: number }) {
+  const normalizedValue = Math.max(0, Math.min(100, value))
+  const normalizedOverage = Math.max(0, overage)
+  const total = 100 + normalizedOverage
+  return <div className={`${s.progress} ${normalizedOverage > 0 ? s.overInvoicedProgress : ''}`} role="progressbar" aria-label={label} aria-valuetext={label} aria-valuenow={normalizedValue} aria-valuemin={0} aria-valuemax={100}>
+    {normalizedOverage > 0 ? <><span style={{ width: `${100 / total * 100}%` }}/><span style={{ width: `${normalizedOverage / total * 100}%` }}/></> : <span style={{ width: `${normalizedValue}%` }}/>}
+  </div>
+}
+export function ContractSummary({ contractValue, totalInvoiced, grossContractScope = contractValue, grossScopeInvoiced = totalInvoiced, reservedByDraft = 0, taxCreditBalance = 0, contractValueDetail, showOverInvoiced = false, retainageWithheld = 0, retainageReleased = 0, onReleaseRetainage, releaseDisabled = false, releaseDisabledReason }: { contractValue: number; totalInvoiced: number; grossContractScope?: number; grossScopeInvoiced?: number; reservedByDraft?: number; taxCreditBalance?: number; contractValueDetail?: ReactNode; showOverInvoiced?: boolean; retainageWithheld?: number; retainageReleased?: number; onReleaseRetainage?: () => void; releaseDisabled?: boolean; releaseDisabledReason?: string }) {
+  const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+  const remaining = Math.max(0, contractValue - totalInvoiced)
+  const overInvoiced = showOverInvoiced && totalInvoiced > contractValue
+  const overInvoicedAmount = Math.max(0, totalInvoiced - contractValue)
+    const progress = grossContractScope > 0 ? grossScopeInvoiced / grossContractScope * 100 : 0
+  const formattedProgress = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(progress) + '%'
+    const progressDisplay = formattedProgress
+  const held = Math.max(0, retainageWithheld - retainageReleased)
+  return <section className={s.contractSummary} aria-label="Contract summary">
+    <div className={s.contractSummaryMetrics}>
+      <div><span>Contract value</span><strong>{currency.format(contractValue)}</strong>{contractValueDetail && <small className={s.contractValueDetail}>{contractValueDetail}</small>}</div>
+      <div><span>Total invoiced</span><strong>{currency.format(totalInvoiced)}</strong>{reservedByDraft > 0 && <small className={s.contractValueDetail}>{currency.format(reservedByDraft)} reserved by a draft</small>}</div>
+      {overInvoiced ? <><div><span>Contract progress</span><strong>{progressDisplay}</strong></div><div><span>Over invoiced</span><strong>{currency.format(overInvoicedAmount)}</strong></div></> : <><div><span>Remaining</span><strong>{currency.format(remaining)}</strong></div><div><span>Contract progress</span><strong>{progressDisplay}</strong></div></>}
+    </div>
+      <ProgressBar value={Math.min(100, progress)} overage={Math.max(0, progress - 100)} label={`${formattedProgress} of gross contract scope invoiced`}/>
+    {taxCreditBalance > 0 && <div className={s.retainageSummary}><div><span>Tax credit balance</span><strong>{currency.format(taxCreditBalance)}</strong><small className={s.contractValueDetail}>Automatically applied to future invoices</small></div></div>}
+    {(retainageWithheld > 0 || retainageReleased > 0) && <div className={s.retainageSummary}><div><span>Total retained</span><strong>{currency.format(retainageWithheld)}</strong></div><div><span>Retainage released</span><strong>{currency.format(retainageReleased)}</strong></div><div><span>Retainage held</span><strong>{currency.format(held)}</strong></div>{held > 0 && onReleaseRetainage && <Button variant="secondary" disabled={releaseDisabled} title={releaseDisabledReason} onClick={onReleaseRetainage}>Release retainage</Button>}</div>}
+  </section>
 }
 export function Field({ label, hint, prefix, id, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; prefix?: string }) {
   const generatedId = useId(); const fieldId = id ?? generatedId
@@ -81,6 +106,9 @@ export function Modal({ open, title, children, onClose, footer }: { open: boolea
 }
 export function EmptyState({ children }: { children: ReactNode }) {
   return <div className={s.emptyState}>{children}</div>
+}
+export function EmptyValue({ label = 'Not set' }: { label?: string }) {
+  return <span className={s.emptyValue} aria-label={label}>—</span>
 }
 export function AmountBanner({ amount, detail, tone = 'info', action }: { amount: string; detail?: string; tone?: 'info' | 'success'; action?: ReactNode }) {
   return <div className={`${s.amountBanner} ${tone === 'success' ? s.amountSuccess : ''}`}><div><strong>{amount}</strong>{detail && <p>{detail}</p>}</div>{action}</div>

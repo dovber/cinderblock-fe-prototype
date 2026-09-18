@@ -1,15 +1,30 @@
-import { useState } from 'react'
-import { Plus } from 'lucide-react'
-import { WorkspaceShell, workspaceLabels, type WorkspaceSection } from '../../shared/shell'
-import { Button, Card, Modal, PageHeading } from '../../shared/ui'
+import { useState, type ReactNode } from 'react'
+import { WorkspaceShell, type WorkspaceSection } from '../../shared/shell'
+import { PageHeading } from '../../shared/ui'
 import s from './ShellPreview.module.css'
 
-export function ShellPreview() {
+type ShellPreviewProps = {
+  onOpenRegularEstimate?: () => void
+  onOpenRetainageEstimate?: () => void
+  onNavigate?: () => void
+  estimatesContent?: ReactNode
+  headerSearch?: ReactNode
+}
+
+export function ShellPreview({ onOpenRegularEstimate, onOpenRetainageEstimate, onNavigate, estimatesContent, headerSearch }: ShellPreviewProps) {
   const [section, setSection] = useState<WorkspaceSection>('estimates')
-  const [action, setAction] = useState<string | null>(null)
-  return <WorkspaceShell activeSection={section} onNavigate={setSection} onUtilityAction={setAction}>
-    <PageHeading title={workspaceLabels[section]} actions={<Button icon={<Plus size={17}/>} onClick={() => setAction('Create new')}>Create new</Button>}/>
-    <div className={s.placeholder}><Card title="Your workspace"><p>This page is ready for your content.</p><p className={s.caption}>Select a section in the sidebar to explore the workspace.</p></Card></div>
-    <Modal open={action !== null} title={action ?? ''} onClose={() => setAction(null)} footer={<Button onClick={() => setAction(null)}>Got it</Button>}><p>This action is not available in this preview yet.</p></Modal>
+  const navigate = (next: WorkspaceSection) => {
+    if (next !== 'estimates') return
+    setSection(next)
+    onNavigate?.()
+  }
+  return <WorkspaceShell activeSection={section} onNavigate={navigate} onUtilityAction={() => {}} headerSearch={headerSearch}>
+    {estimatesContent ?? <section className={s.launcher} aria-label="Estimate prototypes">
+      <PageHeading title="Estimate Prototypes"/>
+      <div className={s.prototypeGrid}>
+        {onOpenRegularEstimate && <button className={s.prototypeCard} onClick={onOpenRegularEstimate}><strong>Regular Estimate</strong><span>General estimate and contract lifecycle</span><ul><li>Create standard invoice</li><li>Create progress invoice</li><li>Create change order</li><li>Manage payment schedule</li></ul></button>}
+        {onOpenRetainageEstimate && <button className={s.prototypeCard} onClick={onOpenRetainageEstimate}><strong>Estimate w/ Retainage</strong><span>Focused retainage billing lifecycle</span><ul><li>Manage retainage rule</li><li>Create invoice with retainage</li><li>Create release invoice</li></ul></button>}
+      </div>
+    </section>}
   </WorkspaceShell>
 }

@@ -2,7 +2,10 @@
 
 A standalone React + Vite + TypeScript sandbox for product and UX experiments.
 This is not a production app and has no connection to the real application.
-The initial screen previews the reusable desktop Cinderblock shell with placeholder content; no product features are implemented.
+The initial screen previews the reusable desktop Cinderblock shell. Open Estimates,
+then choose Regular Estimate or Estimate w/ Retainage. The regular scenario exposes
+the general contract lifecycle; the retainage scenario isolates withholding and
+release-invoice behavior.
 
 ## Cinderblock reference setup
 
@@ -15,10 +18,12 @@ and [the complete reference review](docs/reference-review.md) before future UI w
 The [reference manifest](docs/reference-manifest.json) records all source files.
 The workspace includes Inter fonts, Lucide icons, shared tokens and primitives,
 plus a reusable desktop shell in src/shared/shell. The local
-src/prototypes/shell-preview composes the shell with a placeholder page.
-Sidebar selection changes the heading; utility actions show placeholder feedback.
-No Progress Invoice or other business workflow is implemented. The shell uses
-a reconstructed cube mark and initials avatar pending original brand assets.
+src/prototypes/shell-preview composes the shell with a minimal prototype launcher.
+Unsupported product areas and utility actions remain visible but inert.
+The unified contract lifecycle uses mock frontend data only; see its
+[module documentation](src/prototypes/progress-invoices/README.md) and
+[consolidation requirements](docs/contract-lifecycle-prototype.md).
+The shell uses a reconstructed cube mark and initials avatar pending original brand assets.
 Run pnpm dev and open the local address to inspect the preview.
 
 Match the existing product closely. PDF files are visual references only:
@@ -49,8 +54,8 @@ pnpm preview
 ```text
 src/
   main.tsx          # React startup only
-  app/              # Placeholder entry component and global styles
-  prototypes/       # One self-contained folder per future experiment
+  app/              # Prototype composition and global styles
+  prototypes/       # Independent shell preview and product-design sandboxes
   shared/ui/        # Preliminary primitives, CSS Module styles, and tokens
 ```
 
@@ -64,8 +69,8 @@ when actual consumers establish the need.
 
 ## Version control
 
-This directory is initialized as a local Git repository on `main`. Repository
-initialization does not create a commit or configure a remote. Dependencies,
+This directory is a local Git repository on `main`, with a committed shared-shell
+baseline. Product prototype work after that baseline is uncommitted. Dependencies,
 the local pnpm store, build output, and local environment files are ignored;
 source screenshots and PDFs remain eligible for version control.
 

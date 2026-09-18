@@ -2,6 +2,31 @@
 
 Reviewed visually on September 10, 2026: every file under `screenshots` and `pdf-docs`, including both pages of each PDF. Dimensions are original image pixels. The PDFs were rendered locally for inspection only; no new PDFs were authored.
 
+The screenshot set was reviewed again after the four creation/selection boards
+were supplied. It now contains 13 PNGs. The earlier
+`create-progress-invoice-flow.png` is no longer present; its historical review is
+retained below. The original reference manifest remains a historical preservation
+baseline rather than a current inventory. No source images were changed by this review.
+
+For implementation scope and user corrections, follow
+[Progress Invoices frontend requirements](progress-invoices-prototype.md).
+The boards below describe related states in one workflow, not separate pages.
+
+## Added creation and selection references
+
+| File | Dimensions | UX findings |
+| --- | --- | --- |
+| [create-percentage.png](../screenshots/create-percentage.png) | 1492 x 690 | Percentage mode for unbilled, partially billed, and over-limit states. Shows subtotal, 75% remaining, and inline error for 76%. Full/rest wording changes with prior billing; wording in the error panel is not a separate workflow. |
+| [create-amount.png](../screenshots/create-amount.png) | 1520 x 655 | Dollar mode of the same partial option. Shows $45,000 remaining and an inline error for $46,000. User correction explicitly combines dollar and percentage modes with a compact switcher. |
+| [select-items.png](../screenshots/select-items.png) | 1450 x 764 | Selecting items changes the first step's primary action to Next. Second step has Back, item checkboxes, Qty/Amount, selection count, Cancel, and disabled Create invoice when none are selected. |
+| [select-items-one-fully-invoiced.png](../screenshots/select-items-one-fully-invoiced.png) | 990 x 541 | Remaining column, partially billed selectable line, unbilled selectable line, and muted fully invoiced disabled line. Three visible lines but only two eligible selections. |
+
+The existing progress editor remains the composition reference. User corrections
+require all estimate lines, including zero-current-billing lines, and the columns
+Contract Amount, Previously Billed, This Invoice, and derived % Complete, with Qty
+separate where appropriate. Customer-view controls in the screenshot do not
+authorize customer progress rendering or preview in this prototype.
+
 ## Screenshots
 
 | File | Dimensions | Findings to preserve |
@@ -39,4 +64,6 @@ Two US Letter pages. Embedded fonts: Inter Regular, Medium, SemiBold.
 
 The signed estimate is #1007; the supplied estimate PDF is #1008. They are different records, not conflicting versions. The progress-invoice screenshots use a different job, customer, date and amounts from the other references and are not connected fixture data. Several editor panels are cut off by the capture; content below the image is unknown. Static images do not establish validation, calculations, navigation destinations, hidden panels, or action outcomes.
 
-No files outside the ten PNGs and two PDFs were present in these reference folders at review time. The manifest records every file and is a baseline for future preservation checks.
+At the initial review there were ten PNGs and two PDFs. The original manifest
+records that initial set. The added-reference section above describes the updated
+screenshot inventory; the original PDFs remain visual references only.

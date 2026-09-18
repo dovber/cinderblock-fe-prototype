@@ -1,2 +1,12 @@
-export { AmountBanner, Avatar, Button, Card, Checkbox, DataTable, EmptyState, Field, FilterSelect, IconButton, MetricCard, Modal, PageHeading, Pagination, ProgressBar, Radio, SearchField, SelectField, SplitButton, StatusBadge, Switch, Tabs, Tag, TextArea } from './components'
+export { AmountBanner, Avatar, Button, Card, Checkbox, ContractSummary, DataTable, EmptyState, EmptyValue, Field, FilterSelect, IconButton, MetricCard, Modal, PageHeading, Pagination, ProgressBar, Radio, SearchField, SelectField, SplitButton, StatusBadge, Switch, Tabs, Tag, TextArea } from './components'
 export type { StatusTone, TableColumn } from './components'
+export { acquireAppRootInert, acquireTopSurface } from './inert'
+export { LineItemDescription } from './LineItemDescription'
+export { LineItemLockIndicator } from './LineItemLockIndicator'
+
+export { EstimateDetailsSection, EstimateItemsSection, EstimateRetainageSetting } from './EstimateSections'
+export { EstimateSurface, EstimateTextSection } from './EstimateSurface'
+export { PaymentScheduleCard } from './PaymentScheduleCard'
+export type { PaymentScheduleCardMilestone } from './PaymentScheduleCard'
+export { PaymentScheduleAllocationWarning } from './PaymentScheduleAllocationWarning'
+export { formatPaymentSchedulePercentage, manualAllocationOverage, paymentScheduleAllocation, paymentScheduleAmount, paymentSchedulePercentage, roundPaymentScheduleAmount } from './paymentScheduleMath'

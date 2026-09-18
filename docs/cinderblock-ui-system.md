@@ -1,12 +1,23 @@
 # Cinderblock visual and UI system
 
-Reference review: September 10, 2026. Scope: visual guidance and scaffold foundations for faithful future prototypes. Inter font imports, Lucide icons, color tokens, and preliminary shared React primitives with CSS Module styles are present. The reusable desktop workspace shell and a local placeholder preview are implemented; product screens and feature logic remain unimplemented.
+Reference review: September 10, 2026. Scope: visual guidance and shared foundations for faithful prototypes. Inter font imports, Lucide icons, color tokens, and shared React primitives with CSS Module styles are present. The reusable desktop workspace shell and the local Progress Invoices frontend prototype are implemented.
 
 ## Current implementation
 
-`src/shared/ui/tokens.css` defines the initial CSS variables. `src/app/styles.css` imports those tokens and Inter weights 400, 500, and 600 from `@fontsource/inter`, and supplies global resets and keyboard focus styles. `src/shared/ui/components.tsx` and `ui.module.css` provide preliminary buttons, fields, cards, status variants, tabs, tables, pagination, and dialogs, exported through `src/shared/ui/index.ts`.
+The Progress Invoices module implements the local frontend workflow
+defined in [Progress Invoices frontend requirements](progress-invoices-prototype.md).
+Those explicit requirements override screenshot variations for this prototype:
+one partial option with a % / $ switcher; full remaining billing for selected
+items; all estimate lines in the editor; and invoice-editor Contract Amount,
+Previously Billed, This Invoice, and derived % Complete columns. Estimate and
+Change Order document tables omit line-level completion. Progress Invoices also provide
+PDF-style and customer web-link previews from the current invoice data. Both
+views are scoped to that prototype and rendered as HTML/CSS; they do not alter
+the normal estimate or invoice customer rendering.
 
-The app composes `src/prototypes/shell-preview`, which consumes `src/shared/shell` and the shared page heading, button, card, progress bar, and modal primitives. The desktop shell uses a 248px sidebar, 56px utility header, and 28px horizontal content inset. Navigation only changes the local selected section and placeholder heading; utility actions show a local unavailable-action dialog. The collapse control is reference chrome with that same placeholder response; no collapsed layout is inferred. The cube mark is reconstructed SVG and the account avatar uses initials. Their styles are starting implementations, not a visually verified product component library. The layout families and contracts below guide future requested work; they do not indicate completed screens or authorize building additional components speculatively.
+`src/shared/ui/tokens.css` defines the initial CSS variables. `src/app/styles.css` imports those tokens and Inter weights 400, 500, and 600 from `@fontsource/inter`, and supplies global resets and keyboard focus styles. `src/shared/ui/components.tsx` and `ui.module.css` provide preliminary buttons, fields, cards, status variants, tabs, tables, pagination, dialogs, and the shared Estimate Contract summary, exported through `src/shared/ui/index.ts`.
+
+The app composes `src/prototypes/shell-preview`, which consumes `src/shared/shell` and shared UI primitives. The desktop shell uses a 248px sidebar, 56px utility header, and 28px horizontal content inset. Navigation changes the local selected section and placeholder heading. Visual controls without an implemented prototype workflow are inert and do not show unavailable-action messages. The cube mark is reconstructed SVG and the account avatar uses initials. Their styles are starting implementations, not a visually verified product component library. The layout families and contracts below guide future requested work; they do not indicate completed screens or authorize building additional components speculatively.
 
 ## Source of truth and fidelity
 
@@ -157,9 +168,16 @@ Table rows are approximately 72 source-image pixels high in the list captures; s
 
 ### Editor line items and financial hierarchy
 
-Estimate editor: row index, item name and Add description, Cost, Markup, Price, Qty, Amount, overflow. Under the row are Add another, Services & Materials, and Add cost plus. Totals show subtotal, discount control, tax, total, followed by a separate internal cost/margin/profit breakdown.
+Estimate editor: row index, item name and Add description, Cost, Markup, Price, Qty, Amount, overflow. Under the row are Add item, Services & Materials, and Add cost plus. Totals show subtotal, discount control, tax, total, followed by a separate internal cost/margin/profit breakdown.
 
-Progress invoice: row index, item name/description, Qty, Contract, Prev. billed, This invoice, overflow. Current billing is darker than the muted contract/previous values. Tiny tax markers appear beside current values. The bottom block contains a percent-prefix Cost plus input, Cost plus fee, Subtotal with info icon, currency-prefix Discount, tax with info icon, and a bold Total.
+Progress/Contract invoice: row index, item name/description, Qty, Contract Amount,
+Previously Billed, This Invoice, % Complete. Current billing is darker than the
+muted contract/previous values. Editable billable current amounts may show the
+compact `Apply remaining` shortcut beneath the input. Estimate and Change Order
+document tables retain their normal item columns without line-level completion.
+Tiny tax markers appear beside current values. The bottom block contains the
+read-only contract-derived Cost Plus percentage, Cost plus fee, Subtotal with info icon,
+currency-prefix Discount, tax with info icon, and a bold Total.
 
 Do not expose editor-only cost, markup, margin, profit, settings, or internal notes in customer documents. Preserve separate display models rather than dumping an editor table into the preview. The financial examples in the progress mockups are not reliable calculation specifications; do not derive billing rules from their totals.
 

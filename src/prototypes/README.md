@@ -1,5 +1,12 @@
-# Independent prototypes
+# Prototype modules
 
-shell-preview/ is a local desktop shell preview with placeholder content, navigation selection, and unavailable-action feedback. It imports shared shell/UI primitives and contains no business workflows.
+- `shell-preview/`: landing page and shared workspace shell composition.
+- `global-search/`: local header search and result-open modal.
+- `progress-invoices/`: unified Estimate/contract lifecycle, including Change
+  Orders, source-aware progress billing, Standard conversion, Payment Schedule,
+  and Retainage. Two launcher entries mount independent Regular Estimate and
+  focused Estimate w/ Retainage state.
 
-Keep future prototypes independent, with local data, state, and CSS Modules. Expose each through index.ts; never import another prototype or the app. Do not connect to production APIs.
+Keep dependencies flowing app → prototypes → shared. Internal subfolders of one
+prototype may share its state/model; separate prototype modules do not import one
+another. Keep all fixture data local and preserve the source references.

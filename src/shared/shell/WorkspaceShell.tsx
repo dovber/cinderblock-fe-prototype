@@ -8,10 +8,11 @@ type WorkspaceShellProps = {
   activeSection: WorkspaceSection
   onNavigate: (section: WorkspaceSection) => void
   children: ReactNode
+  headerSearch?: ReactNode
   onUtilityAction: (action: string) => void
 }
 
-export function WorkspaceShell({ activeSection, onNavigate, children, onUtilityAction }: WorkspaceShellProps) {
+export function WorkspaceShell({ activeSection, onNavigate, children, onUtilityAction, headerSearch }: WorkspaceShellProps) {
   return <div className={s.shell}>
     <a className={s.skipLink} href="#workspace-content">Skip to content</a>
     <aside className={s.sidebar} aria-label="Workspace sidebar">
@@ -30,6 +31,7 @@ export function WorkspaceShell({ activeSection, onNavigate, children, onUtilityA
     </aside>
     <div className={s.workspace}>
       <header className={s.header}>
+        {headerSearch}
         <button className={s.help} onClick={() => onUtilityAction('Help')}><CircleHelp size={18}/>Help</button>
         <button className={`${s.utilityButton} ${s.notification}`} aria-label="Notifications, 3 unread" onClick={() => onUtilityAction('Notifications')}><Bell size={22}/><span>3</span></button>
         <button className={s.utilityButton} aria-label="Settings" onClick={() => onUtilityAction('Settings')}><Settings size={22}/></button>

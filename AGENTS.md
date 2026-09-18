@@ -4,6 +4,6 @@ Read `docs/cinderblock-ui-system.md` and `docs/reference-review.md` before imple
 
 PDFs are visual references only. Future document previews must use React-rendered HTML and CSS, never generated PDFs, embedded PDF viewers, or rasterized pages.
 
-The current phase is scaffold setup and UI-system documentation only. Build features or product screens only when requested in a later task. The scaffold placeholder is not a Cinderblock visual reference.
+The workspace now contains several interactive frontend prototype modules. Read `docs/current-prototype-state.md` before continuing product work; it identifies the current modules, authoritative requirements, shared decisions, validation commands, and working-tree cautions. Build or change product behavior only when the user requests it. The original scaffold placeholder is not a Cinderblock visual reference.
 
 Keep the existing app -> prototypes -> shared dependency direction. Keep prototype data and behavior local; introduce shared implementation when needed by actual consumers. Use the documented internal/customer variants instead of flattening their differences. Do not connect prototype actions to live reference payment or acceptance URLs.
