@@ -218,6 +218,9 @@ project $0 while dollar entry is unavailable.
 
 The dedicated Retainage prototype owns the expanded release ledger: Total
 retained, Released, Held, Available to release, and individual release invoices.
+The configured percentage stays visible before billing, but the release ledger is
+hidden until retained value or release history exists; there is no all-zero
+tracking card.
 Draft releases show a Draft badge beside the invoice number rather than a separate
 summary metric. They still reserve capacity and become Released only at Draft →
 Open; at most one active release Draft exists.

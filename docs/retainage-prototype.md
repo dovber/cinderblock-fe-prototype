@@ -83,6 +83,12 @@ It lists every release invoice and presents **Total retained**, **Released**,
 Contract value and Total invoiced. A Draft release invoice displays its status
 beside the invoice number; there is no separate Draft-reserved summary metric:
 
+The configured Retainage percentage remains visible on the Estimate before any
+Retainage is withheld. The tracking block stays hidden while Total retained is
+$0 and no release Invoice history exists. It appears once the first posted
+Progress Invoice with Retainage makes Total retained greater than $0, and remains
+available whenever retained balance or release history exists.
+
 `retainage held = total retained − retainage released`
 
 Total retained is the cumulative retainage actually withheld across posted
