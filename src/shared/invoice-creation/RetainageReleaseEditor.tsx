@@ -84,7 +84,7 @@ export function RetainageReleaseEditor({ invoice, estimateId, heldAtCreation, is
   return createPortal(<div ref={root} className={s.editor} role="main" aria-label="Retainage invoice editor" tabIndex={-1}>
     <header className={s.editorHeader}>
       <InvoiceEditorHeading title={isNew ? 'New invoice' : `Invoice #${invoice.id}`} kind="retainage-release" closeLabel="Close retainage invoice" closeButton={closeButton} onClose={onClose}/>
-      <div className={s.saveActions}><div className={s.previewActions}><Button variant="secondary" icon={<FileText size={16}/>} disabled={invalid} onClick={() => onPreview?.('pdf', currentInvoice())}>PDF preview</Button><Button variant="secondary" icon={<ExternalLink size={16}/>} disabled={invalid} onClick={() => onPreview?.('web', currentInvoice())}>Customer web preview</Button></div>{isNew && <Button onClick={save} disabled={invalid}>Create invoice</Button>}</div>
+      <div className={s.saveActions}>{!isNew && <div className={s.previewActions}><Button variant="secondary" icon={<FileText size={16}/>} disabled={invalid} onClick={() => onPreview?.('pdf', currentInvoice())}>PDF preview</Button><Button variant="secondary" icon={<ExternalLink size={16}/>} disabled={invalid} onClick={() => onPreview?.('web', currentInvoice())}>Customer web preview</Button></div>}{isNew && <Button onClick={save} disabled={invalid}>Create invoice</Button>}</div>
     </header>
     <div className={s.editorLayout}>
       <div className={s.editorMain}>

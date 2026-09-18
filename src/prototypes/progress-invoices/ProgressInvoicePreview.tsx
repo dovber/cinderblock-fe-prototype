@@ -37,14 +37,13 @@ function ProgressTable({ invoice, lines, tone, showAll = true, contractValue, vi
   const costPlusContract = rounded(sum(costPlusLines.map(({ line }) => line.contract)))
   const costPlusPrevious = rounded(sum(costPlusLines.map(({ line }) => line.previous)))
   const costPlusCurrent = invoiceCostPlusAllocation(lines, invoice.lineAmounts)
-  const costPlusComplete = costPlusContract === 0 ? 0 : (costPlusPrevious + costPlusCurrent) / costPlusContract * 100
   return <><div className={`${s.tableWrap} ${s[tone]}`}><table className={s.progressTable}>
     <caption>Progress invoice line items</caption>
     {!grouped && <thead>{columns}</thead>}
     <tbody>{visible.map(({ line, index, current }, position) => <Fragment key={line.id}>
       {grouped && (position === 0 || visible[position - 1].line.sourceId !== line.sourceId) && <><tr className={s.sourceGroup}><th colSpan={columnCount}>{line.sourceLabel}</th></tr>{columns}</>}
       <tr className={current > 0 ? undefined : s.notBilled}><td><strong style={line.kind === 'removal' ? { textDecoration: 'line-through' } : undefined}>{line.name}</strong><span>{invoice.descriptions[index] || line.description || lineDescriptions[line.id]}</span>{visibility.sku && line.sku && <span>SKU: {line.sku}</span>}{visibility.code && line.code && <span>Item code: {line.code}</span>}{line.modifiedBy && <span>Removed by {line.modifiedBy}</span>}</td><td>{line.qty}</td>{visibility.contract && <td>{money(line.contract)}</td>}{visibility.previous && <td>{line.kind === 'removal' ? <EmptyValue/> : money(line.previous)}</td>}{visibility.current && <td>{line.kind === 'removal' ? <EmptyValue/> : money(current)}</td>}{visibility.completion && <td>{line.kind === 'removal' ? <EmptyValue/> : `${percent(completion(line, current))}${asterisk(line, current) ? '*' : ''}`}</td>}</tr>
-    </Fragment>)}{costPlusCurrent > 0 && <tr><td><strong>Cost plus fee</strong></td><td>1</td>{visibility.contract && <td>{money(costPlusContract)}</td>}{visibility.previous && <td>{money(costPlusPrevious)}</td>}{visibility.current && <td>{money(costPlusCurrent)}</td>}{visibility.completion && <td>{percent(costPlusComplete)}</td>}</tr>}</tbody>
+    </Fragment>)}{costPlusCurrent > 0 && <tr><td><strong>Cost plus fee</strong><span>Cost plus at {percent(invoice.costPlus)}</span></td><td>1</td>{visibility.contract && <td>{money(costPlusContract)}</td>}{visibility.previous && <td>{money(costPlusPrevious)}</td>}{visibility.current && <td>{money(costPlusCurrent)}</td>}{visibility.completion && <td/>}</tr>}</tbody>
   </table></div>{visible.some(({ line, current }) => asterisk(line, current)) && <p className={s.asteriskNote}>* This percentage is offset by billing previously applied to scope removed by a Change Order.</p>}</>
 }
 function CustomerContractSummary({ invoice, lines, contractValue, contractPreviouslyBilled }: Pick<Props, 'invoice' | 'lines' | 'contractValue' | 'contractPreviouslyBilled'>) {

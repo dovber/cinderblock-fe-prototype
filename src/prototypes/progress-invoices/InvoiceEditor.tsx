@@ -117,7 +117,11 @@ export function InvoiceEditor({ contractValue, contractPreviouslyBilled, lines, 
 
   const contractError = !locked && lineSubtotal > Math.max(0, contract - previouslyBilled) + .01 ? 'Exceeds remaining contract value' : ''
 
-  const grouped = lines.some(line => line.sourceId && line.sourceId !== 'estimate')
+  const regularLineEntries = lines.map((line, index) => ({ line, index })).filter(({ line }) => line.scopeKind !== 'cost-plus')
+
+  const costPlusLines = lines.filter(line => line.scopeKind === 'cost-plus')
+
+  const grouped = regularLineEntries.some(({ line }) => line.sourceId && line.sourceId !== 'estimate')
 
   const feePercent = invoice.costPlus
 
@@ -128,6 +132,10 @@ export function InvoiceEditor({ contractValue, contractPreviouslyBilled, lines, 
   const retainageRate = parseAmount(retainagePercent)
 
   const fee = invoiceCostPlusAllocation(lines, validAmounts)
+
+  const costPlusContract = rounded(sum(costPlusLines.map(line => line.contract)))
+
+  const costPlusPreviouslyBilled = rounded(sum(costPlusLines.map(line => line.previous)))
 
   const subtotal = lineSubtotal
 
@@ -226,7 +234,7 @@ export function InvoiceEditor({ contractValue, contractPreviouslyBilled, lines, 
 
       <InvoiceEditorHeading title={isNew ? 'New invoice' : `Invoice #${invoice.id}`} kind="progress" milestoneName={milestoneName} closeLabel="Close progress invoice" closeButton={closeButton} onClose={onClose}/>
 
-      <div className={s.saveActions}><div className={s.previewActions}><Button variant="secondary" icon={<FileText size={16}/>} onClick={() => setPreviewMode('pdf')}>PDF preview</Button><Button variant="secondary" icon={<ExternalLink size={16}/>} onClick={() => setPreviewMode('web')}>Customer web preview</Button></div>{locked && <span className={s.lockedMessage}>{financialLockReason ?? 'Financial fields are locked'}</span>}{isNew ? <Button onClick={() => save()} disabled={invalid}>Create invoice</Button> : dirty && editable ? <Button onClick={() => save()} disabled={invalid}>Save changes</Button> : null}</div>
+      <div className={s.saveActions}>{!isNew && <div className={s.previewActions}><Button variant="secondary" icon={<FileText size={16}/>} onClick={() => setPreviewMode('pdf')}>PDF preview</Button><Button variant="secondary" icon={<ExternalLink size={16}/>} onClick={() => setPreviewMode('web')}>Customer web preview</Button></div>}{locked && <span className={s.lockedMessage}>{financialLockReason ?? 'Financial fields are locked'}</span>}{isNew ? <Button onClick={() => save()} disabled={invalid}>Create invoice</Button> : dirty && editable ? <Button onClick={() => save()} disabled={invalid}>Save changes</Button> : null}</div>
 
     </header>
 
@@ -268,35 +276,30 @@ export function InvoiceEditor({ contractValue, contractPreviouslyBilled, lines, 
 
               {!grouped && <thead><tr><th className={s.rowNumber}><span className={s.srOnly}>Line</span></th><th className={s.itemName}>Item name</th><th>Qty</th>{visible.contract && <th className={s.numeric}>Contract Amount</th>}{visible.previous && <th className={s.numeric}>Previously Billed</th>}{visible.current && <th className={s.numeric}>This Invoice</th>}{visible.completion && <th className={s.numeric}>% Complete</th>}</tr></thead>}
 
-              <tbody>{lines.map((line, index) => {
+              <tbody>{regularLineEntries.map(({ line, index }, position) => {
                 const lineLockReason = invoiceLockReason
                   ?? (line.kind === 'superseded' ? 'This item is locked because it was superseded by an accepted Change Order.'
                     : line.kind === 'removal' ? 'This item is locked because it records scope removed by an accepted Change Order.'
-                      : line.scopeKind === 'cost-plus' ? 'This item is locked because Cost Plus billing is calculated from its related contract item.'
-                        : remaining(line) === 0 ? 'This item is locked because it has already been fully invoiced.'
-                          : undefined)
-                return <Fragment key={line.id}>{grouped && (index === 0 || lines[index - 1].sourceId !== line.sourceId) && <><tr className={s.sourceGroup}><th colSpan={7}>{line.sourceLabel}</th></tr><tr className={s.sourceColumns}><th/><th>Item name</th><th>Qty</th>{visible.contract && <th>Contract Amount</th>}{visible.previous && <th>Previously Billed</th>}{visible.current && <th>This Invoice</th>}{visible.completion && <th>% Complete</th>}</tr></>}<tr data-line={line.id} className={remaining(line) === 0 ? s.completedLine : ''}>
+                      : remaining(line) === 0 ? 'This item is locked because it has already been fully invoiced.'
+                        : undefined)
+                return <Fragment key={line.id}>{grouped && (position === 0 || regularLineEntries[position - 1].line.sourceId !== line.sourceId) && <><tr className={s.sourceGroup}><th colSpan={7}>{line.sourceLabel}</th></tr><tr className={s.sourceColumns}><th/><th>Item name</th><th>Qty</th>{visible.contract && <th>Contract Amount</th>}{visible.previous && <th>Previously Billed</th>}{visible.current && <th>This Invoice</th>}{visible.completion && <th>% Complete</th>}</tr></>}<tr data-line={line.id} className={remaining(line) === 0 ? s.completedLine : ''}>
 
-                <td className={s.rowNumber}>{index + 1}</td><td className={s.itemName}><div style={line.kind === 'removal' ? { textDecoration: 'line-through' } : undefined}>{line.name}{lineLockReason && <LineItemLockIndicator reason={lineLockReason}/>}</div>{line.modifiedBy && <small>Modified by {line.modifiedBy}</small>}{line.originatedFrom && <small>Originated from {line.originatedFrom}</small>}<LineItemDescription description={descriptions[index]} className={s.itemDescription}/>{visible.sku && <small>SKU: {line.sku}</small>}{visible.code && <small>Item code: {line.code}</small>}{remaining(line) === 0 && (!line.kind || line.kind === 'active') && <small>Fully invoiced</small>}</td>
+                <td className={s.rowNumber}>{position + 1}</td><td className={s.itemName}><div style={line.kind === 'removal' ? { textDecoration: 'line-through' } : undefined}>{line.name}{lineLockReason && <LineItemLockIndicator reason={lineLockReason}/>}</div>{line.modifiedBy && <small>Modified by {line.modifiedBy}</small>}{line.originatedFrom && <small>Originated from {line.originatedFrom}</small>}<LineItemDescription description={descriptions[index]} className={s.itemDescription}/>{visible.sku && <small>SKU: {line.sku}</small>}{visible.code && <small>Item code: {line.code}</small>}{remaining(line) === 0 && (!line.kind || line.kind === 'active') && <small>Fully invoiced</small>}</td>
 
                 <td className={s.historical}>{line.qty}</td>{visible.contract && <td className={`${s.numeric} ${s.historical}`}>{money(line.contract)}</td>}{visible.previous && <td className={`${s.numeric} ${s.historical}`}>{line.kind === 'removal' ? <EmptyValue/> : money(line.previous)}</td>}
 
-                {visible.current && <td className={s.currentCell}>{line.kind === 'removal' ? <EmptyValue/> : line.kind === 'superseded' || locked || line.scopeKind === 'cost-plus' ? <span className={s.lockedAmount}>{money(validAmounts[index])}</span> : <><div className={s.moneyInput}><span>$</span><input inputMode="decimal" aria-label={`This Invoice for ${line.name}`} aria-invalid={!!errors[index]} aria-describedby={errors[index] ? `line-error-${line.id}` : undefined} disabled={remaining(line) === 0} value={amounts[index]} onChange={event => setAmounts(amounts.map((amount, i) => i === index ? event.target.value : amount))} onBlur={() => { if (!errors[index]) setAmounts(amounts.map((amount, i) => i === index ? parseAmount(amount).toFixed(2) : amount)) }}/></div>{!errors[index] && remaining(line) > 0 && validAmounts[index] < remaining(line) && <button type="button" className={s.applyRemaining} onClick={() => setAmounts(amounts.map((amount, i) => i === index ? remaining(line).toFixed(2) : amount))}>Apply remaining</button>}{errors[index] && <small id={`line-error-${line.id}`} className={s.error} role="alert">{errors[index]}</small>}</>}</td>}
+                {visible.current && <td className={s.currentCell}>{line.kind === 'removal' ? <EmptyValue/> : line.kind === 'superseded' || locked ? <span className={s.lockedAmount}>{money(validAmounts[index])}</span> : <><div className={s.moneyInput}><span>$</span><input inputMode="decimal" aria-label={`This Invoice for ${line.name}`} aria-invalid={!!errors[index]} aria-describedby={errors[index] ? `line-error-${line.id}` : undefined} disabled={remaining(line) === 0} value={amounts[index]} onChange={event => setAmounts(amounts.map((amount, i) => i === index ? event.target.value : amount))} onBlur={() => { if (!errors[index]) setAmounts(amounts.map((amount, i) => i === index ? parseAmount(amount).toFixed(2) : amount)) }}/></div>{!errors[index] && remaining(line) > 0 && validAmounts[index] < remaining(line) && <button type="button" className={s.applyRemaining} onClick={() => setAmounts(amounts.map((amount, i) => i === index ? remaining(line).toFixed(2) : amount))}>Apply remaining</button>}{errors[index] && <small id={`line-error-${line.id}`} className={s.error} role="alert">{errors[index]}</small>}</>}</td>}
 
                 {visible.completion && <td className={s.numeric}><span className={completion(line, validAmounts[index]) === 100 ? s.complete : ''}>{line.kind === 'removal' || errors[index] ? <EmptyValue/> : percent(completion(line, validAmounts[index]))}</span></td>}
 
               </tr></Fragment>
-              })}</tbody>
+              })}{feePercent > 0 && <tr data-line="cost-plus-fee"><td className={s.rowNumber}>{regularLineEntries.length + 1}</td><td className={s.itemName}><div>Cost plus fee<LineItemLockIndicator reason="This item is locked because Cost Plus billing is calculated from the applicable contract items."/></div><LineItemDescription description={`Cost plus at ${percent(feePercent)}`} className={s.itemDescription}/></td><td className={s.historical}>1</td>{visible.contract && <td className={`${s.numeric} ${s.historical}`}>{money(costPlusContract)}</td>}{visible.previous && <td className={`${s.numeric} ${s.historical}`}>{money(costPlusPreviouslyBilled)}</td>}{visible.current && <td className={s.currentCell}><span className={s.lockedAmount}>{money(fee)}</span></td>}{visible.completion && <td className={s.numeric}/>}</tr>}</tbody>
 
             </table></div>
 
             {errors.some(Boolean) && <p className={s.validationSummary} role="alert">Correct the highlighted invoice amounts before saving.</p>}
 
             <div className={s.totalsArea}><dl className={s.invoiceTotals}>
-
-              {feePercent > 0 && <><div><dt>Cost plus</dt><dd>{percent(feePercent)}</dd></div>
-
-              <div><dt>Cost plus fee</dt><dd>{money(fee)}</dd></div></>}
 
               <div><dt>{retainageEnabled ? 'Subtotal billed' : 'Subtotal'} <Info size={13} aria-label="Line amounts including allocated Cost Plus scope"/></dt><dd>{money(subtotal)}</dd></div>
 
