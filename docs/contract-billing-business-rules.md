@@ -8,6 +8,33 @@ in the feature-specific prototype documents.
 The normative formulas, persisted allocation records, ledger event matrix,
 accounting treatment, and deterministic fixtures are in
 [`contract-billing-financial-spec.md`](contract-billing-financial-spec.md).
+Future QuickBooks Online document mapping, sync ownership, concurrency, and
+conflict handling are defined separately in
+[`quickbooks-online-sync-requirements.md`](quickbooks-online-sync-requirements.md).
+
+## Canonical Contract and Progress billing model
+
+Progress Invoicing always operates against a Contract. Accepting an Estimate
+establishes that Contract. Before any Accepted Change Order exists, the Contract
+is the Accepted Estimate. Each Accepted Change Order revises that same Contract,
+so the current Contract is the Accepted Estimate plus all Accepted Change Orders.
+There is no Estimate-level Progress accounting model that later becomes a
+Contract-level model.
+
+The first Accepted Change Order does not create a new billing model or ledger,
+migrate or reset billing history, remap Estimate lines to Change Order lines, or
+recreate contract pools and reservations. Existing invoice allocations, source
+history, Discount Pool, Cost Plus state, Tax Credit Balance, Retainage state,
+Payment Schedule, and Draft reservations continue against the same Contract.
+Acceptance creates a new contract revision and applies the existing revision and
+Draft-collision rules.
+
+The Contract aggregates accepted source lines without flattening their lineage.
+Every accepted Estimate or Change Order source line retains its source identity,
+accepted quantity and value, posted and reserved allocations, and remaining
+billable allocation. A Change Order may add, remove, replace, or otherwise modify
+scope without a one-to-one mapping to an Estimate line. Historical billing is
+never redistributed merely to make revised source lines appear complete.
 
 ## Invoice lifecycle and posting
 
@@ -98,6 +125,81 @@ separately.
 **Total Invoiced** is posted Gross Contract Scope Invoiced less discount actually
 applied to posted invoices. Tax is excluded. Retainage and payments do not reduce
 it.
+
+**Not yet invoiced subtotal**, also displayed as **Remaining subtotal** in the
+Progress Invoice creation flow, is the current Contract's remaining gross scope:
+`max(0, Gross Contract Scope − posted Gross Contract Scope Invoiced)`. It includes
+associated Cost Plus scope and is before discount, tax, retainage, and payments.
+Active Draft reservations reduce the amount available to a new Progress Invoice.
+The value is reconciled from the source allocation ledger, including accepted
+supersession and deductive scope; it is not a naive sum of positive-looking line
+balances and does not require or create Estimate-to-Change-Order line mappings.
+Actual selection is constrained by both this Contract-level availability and each
+eligible source line's remaining allocation. Historical allocations remain on
+their original lines even when revised scope means an individual current line
+does not reach 100 percent at Contract completion.
+
+Remaining subtotal is distinct from the Contract summary's net **Remaining**
+amount. Contract summary Remaining is `Contract Value − Total Invoiced` and may
+reflect applied or unapplied discount. The Progress Invoice creation prompt must
+not subtract the Contract Discount Pool from Remaining subtotal. Scope selection
+answers how much underlying gross Contract scope remains available; the separate
+Discount Pool step answers how much contractual discount remains available to
+apply.
+
+## Contract billing state
+
+Contract billing state belongs to the current Contract, not to an
+individual Estimate or Change Order source document:
+
+- **Accepted** — the Contract is accepted and has no posted tracked Progress
+  billing.
+- **Partially Billed** — posted tracked Progress billing exists and the
+  current Contract has remaining uninvoiced gross scope.
+- **Billed** — posted tracked Progress billing exists and the current Contract
+  has no remaining uninvoiced gross scope under the existing completion and
+  over-invoicing rules.
+
+A Draft reserves scope but does not by itself move the Contract out of Accepted,
+because Draft allocations are not posted billing. Accepting positive Change Order
+scope after a Contract was Billed returns the Contract to Partially Billed
+when prior posted billing exists and the revised Contract has remaining scope.
+The original Estimate and every Accepted Change Order display that same Contract
+Billing state wherever Contract billing status is the applicable
+document-status presentation. A Change Order is never independently marked
+Billed based only on its own source lines.
+
+Change Order approval lifecycle state remains separate: Draft, Pending, Accepted,
+Declined, and Canceled continue to describe the CO's approval history, even when a
+surface presents the Contract's billing status. Standard Invoice and Progress
+Invoice flows share **Billed** as the completed Contract status, even though the
+Standard Invoice remains a separate full-scope copy/conversion path and does not
+participate in tracked Contract Progress.
+
+### Contract Progress consistency scenarios
+
+- An Accepted $100,000 Estimate immediately establishes a $100,000 Contract; no
+  parallel Estimate Progress model exists.
+- With $40,000 posted, the Contract is Partially Billed and has $60,000 Not yet
+  invoiced subtotal before active Draft reservations.
+- With the full $100,000 posted, the Contract is Billed and Not yet invoiced
+  subtotal is $0.
+- If a +$10,000 CO is then Accepted, the current Contract is $110,000, prior
+  $100,000 billing remains on its original source scope, Not yet invoiced subtotal
+  is $10,000, and the Contract returns to Partially Billed.
+- If a +$20,000 CO is Accepted while $40,000 of a $100,000 Contract is posted,
+  the current Contract is $120,000, the $40,000 history is unchanged, the new CO
+  lines become additional source scope, and the Contract remains Partially
+  Billed.
+- A deductive CO changes current accepted source scope without redistributing
+  historical allocations. Existing over-invoicing, Tax Credit, and correction
+  rules govern when revised scope falls below posted billing; no line mapping is
+  introduced.
+- A Contract discount never reduces Not yet invoiced subtotal or Remaining
+  subtotal. Discount availability and consumption remain in the separate Discount
+  Pool.
+- An active Draft reserves Contract and source-line availability, but remains
+  excluded from posted billing, Contract Progress, and billing status.
 
 ## Discount pool
 
@@ -356,7 +458,7 @@ of prototype scope. The prototype is not required to reproduce Draft-to-Open for
 Standard Invoices.
 
 Conversion takes effect only after the Standard Invoice Draft saves successfully.
-While an active Standard Invoice exists, the Estimate is Converted and tracked
+While an active Standard Invoice exists, the Estimate is Billed and tracked
 invoicing, Change Orders, and the applicable Payment Schedule path are disabled.
 Deleting the Draft or canceling the invoice removes the conversion lock,
 subject to the normal constraints. History and the consumed invoice number stay.
@@ -445,7 +547,8 @@ invoice/payment, CO-reservation, numbering, and parallel-acceptance races.
 
 Local Cinderblock state is authoritative. QuickBooks failures never roll back a
 valid local operation; QBO correction and reconciliation belong in a separate
-integration requirements document.
+integration requirements document. See
+[`quickbooks-online-sync-requirements.md`](quickbooks-online-sync-requirements.md).
 
 Existing Financial-area access and the corresponding Estimate, Change Order,
 Invoice, payment, and retainage permissions govern these features. No Contract

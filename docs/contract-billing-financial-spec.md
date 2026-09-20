@@ -23,10 +23,22 @@ currency-precision milestone amount for billing, schedule totals, and validation
 | Cost Plus invoice allocation | Base invoice allocation ÷ base contract scope × associated Cost Plus scope |
 | Total Invoiced | Posted base allocation + posted Cost Plus allocation − posted discount |
 | Contract Progress | Posted gross allocation ÷ current Gross Contract Scope |
+| Not yet invoiced subtotal | max(0, current Gross Contract Scope − posted gross allocation); reconcile through accepted source allocations and supersession history |
+| Available remaining subtotal | max(0, Not yet invoiced subtotal − active Draft gross reservations) |
 | Milestone planned amount | round-to-currency(precise milestone % × Contract Value); the stored amount is authoritative for billing and schedule validation |
 | Milestone gross default | Canonical milestone % × Gross Contract Scope |
 | Milestone discount suggestion | min(canonical milestone % × applicable original Contract Discount, remaining Discount Pool) |
 | Final-scope predicate | Current Invoice Gross Allocation = Remaining Gross Contract Allocation |
+
+Not yet invoiced subtotal and Available remaining subtotal are gross, pre-discount
+scope measures used by tracked Progress Invoice creation. Neither subtracts the
+Contract Discount Pool. The net Contract-summary Remaining amount continues to be
+`Contract Value − Total Invoiced` and is a separate measure. All gross remaining
+values reconcile to persisted accepted source-line allocations, supersession
+history, and related Cost Plus allocation records; no Estimate-to-Change-Order
+line mapping is inferred. Selection remains bounded by both the Contract aggregate
+and eligible source-line capacity, so a remaining positive line balance does not
+create Contract availability after aggregate completion.
 
 Internal Cost never enters a Cost Plus formula. Cost Plus is explicit contract
 scope linked to one underlying priced source line. It is not a discretionary

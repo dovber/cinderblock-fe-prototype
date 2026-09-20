@@ -1,7 +1,9 @@
-# Contract Invoices frontend prototype
+# Contract-aware Progress Invoice presentation
 
 > Canonical invoice posting and financial definitions are defined in
 > `docs/contract-billing-business-rules.md` and supersede conflicting wording here.
+> QuickBooks Online line mapping and post-sync safeguards are defined in
+> `docs/quickbooks-online-sync-requirements.md`.
 
 Consolidation update: these requirements now run inside the unified contract
 lifecycle. See [current ownership and integration rules](contract-lifecycle-prototype.md).
@@ -10,13 +12,17 @@ that integration; the detailed document behavior below remains applicable.
 
 ## Purpose and scope
 
-The Contract Invoice prototype explores tracked progress billing after one or
-more Change Orders have been Accepted. It is a billing variant in the unified lifecycle
-using the current contract state. It does not add APIs, persistence, QuickBooks behavior,
-production allocation rules, or exact accounting and rounding logic.
+This document defines the contract-aware presentation used for tracked Progress
+billing when one or more Change Orders have been Accepted. Progress Invoicing was
+already operating against the Contract before the first CO: the Accepted Estimate
+established it, and each Accepted CO revises it. The first CO does not create a
+new accounting model, migrate history, reset progress, or create another ledger.
 
-A **Contract Invoice** is the automatically selected tracked invoice across the full accepted contract:
-the original Accepted Estimate plus every Accepted Change Order. It shares the Progress Invoice controller, editor, and invoice ledger.
+**Contract Invoice** is retained only as the established product-facing name for
+this automatically selected presentation variant. It bills the same Contract as
+the Progress Invoice flow, using the same controller, editor, invoice ledger,
+pools, reservations, and billing state. The accepted Contract consists of the
+original Accepted Estimate plus every Accepted Change Order.
 
 ## Contract state
 
@@ -46,14 +52,15 @@ Payment Schedule never reserves Gross Contract Scope or changes the existing
 billing eligibility rules. See
 [Payment Schedule frontend prototype](payment-schedule-prototype.md).
 
-The first Accepted Change Order switches all future tracked invoice creation to
-this flow automatically. `Create invoice` opens the contract-aware creation flow. Since
+The first Accepted Change Order enables this contract-aware presentation for all
+future tracked invoice creation automatically; it does not switch financial
+models. `Create invoice` opens the contract-aware creation flow. Since
 all fixtures contain earlier progress billing, the first step offers:
 
-- `The rest of this contract`, with `Remaining: $X`.
+- `The rest of this contract`, with `Remaining subtotal: $X`.
 - `Percent or amount`, with the established `% / $` switcher. Percentage mode
-  displays the remaining dollar and percentage limits; dollar mode displays the
-  remaining dollar limit.
+  displays the remaining-subtotal dollar and percentage limits; dollar mode
+  displays the remaining-subtotal dollar limit.
 - `Select items`, followed by a source-grouped selector.
 
 The method option remains **Select items**. Its item-selection screen is titled
@@ -98,13 +105,22 @@ Draft invoices reserve scope but remain excluded from posted billing totals:
 - `Previously billed` includes posted tracked billing that precedes the current
   invoice in the immutable contract billing sequence. Draft, Canceled, and later
   invoices are excluded.
-- `This invoice` is the live sum of editable current-invoice amounts.
-- `Remaining after invoice` is Contract value less Previously billed and This invoice.
+- `This invoice` is the live gross scope allocated by the current invoice; its
+  separate discount and totals continue to follow the shared invoice rules.
+- `Remaining subtotal after invoice` is the gross, pre-discount source scope left
+  after posted allocations, active reservations, and this invoice's allocation.
+  It is not Contract Value less a gross invoice subtotal.
 - `Contract progress` uses gross scope consumed, including document-level Cost Plus,
   divided by current Gross Contract Scope. Discount does not increase progress.
 
-Editing `This invoice` updates the projected remaining amount, progress percentage,
-and progress bar immediately. If projected billing exceeds Contract value, the summary
+The shared Contract summary's net `Remaining` continues to mean Contract Value
+less Total Invoiced. It is distinct from Remaining subtotal used to constrain
+invoice creation. The Contract Discount Pool remains a separate allocation step
+and is never subtracted from Remaining subtotal.
+
+Editing `This invoice` updates the projected remaining subtotal, net summary
+amounts after the selected discount, progress percentage, and progress bar
+immediately. If projected net Total Invoiced exceeds Contract value, the summary
 shows a positive `Over invoiced` amount, permits progress above 100%, and divides the
 bar into green accepted-contract and red over-invoiced segments normalized against
 projected invoicing.

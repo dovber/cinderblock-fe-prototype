@@ -3,6 +3,8 @@
 > Canonical contract-value, discount, acceptance collision, locking, and
 > over-invoicing rules are defined in `docs/contract-billing-business-rules.md`
 > and supersede conflicting wording here.
+> QuickBooks Online document mapping and post-sync safeguards are defined in
+> `docs/quickbooks-online-sync-requirements.md`.
 
 Consolidation update: these requirements now run inside the unified contract
 lifecycle. See [current ownership and integration rules](contract-lifecycle-prototype.md).
@@ -67,7 +69,7 @@ Change Order; neither value is inherited or written back to another document.
 | State | Contract effect | Editor behavior | Destructive action |
 | --- | --- | --- | --- |
 | New / unsaved | None | Editable; no badge or lineage row | Close discards |
-| Draft | Proposed only | Editable until a Contract Invoice draw exists | Delete with confirmation |
+| Draft | Proposed only | Editable until a later tracked-invoice dependency locks it under the existing rules | Delete with confirmation |
 | Pending | Proposed only | Awaiting acceptance; source lines remain reserved | Delete with confirmation |
 | Accepted | Delta included | Financially immutable; corrections require another Change Order | Delete blocked |
 | Declined | None | Historical | Delete allowed |
@@ -102,7 +104,13 @@ status and accepted contract state remain unchanged.
 
 ## CO acceptance and invoice collision
 
-The first Accepted CO automatically changes all future tracked billing from Progress Invoice to Contract Invoice. The contractor continues to use `Create invoice`; the system chooses the correct tracked editor.
+Progress Invoicing is Contract-based before and after the first Accepted CO. The
+Accepted Estimate established the Contract; accepting a CO revises that same
+Contract without migrating billing history, resetting progress, creating another
+ledger, or mapping CO lines to Estimate lines. The contractor continues to use
+`Create invoice`. The system may automatically use the established Contract
+Invoice presentation—Contract wording and Estimate/CO source groupings—while the
+underlying tracked billing model remains unchanged.
 
 If an invoice Draft exists when a CO is Accepted:
 
@@ -185,7 +193,20 @@ invoice status or amount. Contract lineage never appears there.
 
 An Accepted Estimate in this prototype uses three equal plain-text actions: `Create invoice`, `Create change order`, and `Create PO`. Multiple Draft and Pending Change Orders may coexist when their source lines do not conflict.
 
-An Accepted CO exposes the same contract-action row. Its `Create invoice` action routes to Contract Invoice. Its `Create change order` action starts the next CO from the current accepted CO context. Saved non-Accepted COs do not show this row.
+An Accepted CO exposes the same contract-action row. Its `Create invoice` action
+opens the contract-aware presentation of the same tracked Progress flow. Its
+`Create change order` action starts the next CO from the current accepted CO
+context. Saved non-Accepted COs do not show this row.
+
+CO approval lifecycle state remains Draft, Pending, Accepted, Declined, or
+Canceled. Contract billing state is separate and belongs to the current
+Contract. Wherever billing status is the applicable presentation, the original
+Estimate and every Accepted CO reflect the same Contract state: Accepted before
+posted tracked billing, Partially Billed while posted billing exists and
+current Contract scope remains, and Billed when posted tracked billing exists
+and the current Contract is fully invoiced. A CO is not independently Billed based only on its own lines. If an
+Accepted CO adds scope to a previously Billed Contract, the Contract and those
+surfaces return to Partially Billed without rewriting historical billing.
 
 ## Fee, tax, discount, and tiers
 
@@ -217,7 +238,10 @@ Estimate deletion is a recoverable soft-delete cascade. Payments must be voided 
 - Partially invoiced / Accepted CO
 - Over invoiced after Accepted deductive CO
 
-The Pending scenario demonstrates that the invoice Draft contributes only a reservation. Accepting the CO cancels that Draft, retains it read-only, releases its reservation, and switches future invoice entry to Contract Invoice.
+The Pending scenario demonstrates that the invoice Draft contributes only a
+reservation. Accepting the CO cancels that Draft, retains it read-only, releases
+its reservation, and enables the contract-aware source-grouped presentation for
+future tracked invoice entry without changing accounting models.
 
 ## Deferred
 
@@ -234,7 +258,9 @@ The Pending scenario demonstrates that the invoice Draft contributes only a rese
 2. Confirm no replacement action, grouping, or relationship exists.
 3. Save a meaningful new CO and remain on its Draft document with Contract details.
 4. Confirm a CO containing only the **Add item** prompt cannot save or send, while a populated named $0 line can.
-5. Accept a Pending CO with a Draft invoice and verify cancellation, reservation release, read-only invoice history, notification, and Contract Invoice routing.
+5. Accept a Pending CO with a Draft invoice and verify cancellation, reservation
+   release, read-only invoice history, notification, and continued tracked billing
+   through the contract-aware source-grouped presentation.
 6. Verify every Accepted CO is financially read-only and that a correction starts a new Change Order.
 7. Verify deletion eligibility for every non-Accepted status and the Accepted block.
 8. Verify Contract value, Total invoiced, Draft reservation, Remaining/Over invoiced, progress text, and progress bar agree on Estimate and saved CO views.

@@ -6,6 +6,9 @@
 > posting state; only the latest active unpaid tracked invoice remains eligible
 > for financial editing or cancellation, and an accepted contract
 > revision also locks Open invoices created against an earlier revision.
+> QuickBooks Online document mapping, synchronization boundaries, and post-sync
+> conflict safeguards are defined in
+> `docs/quickbooks-online-sync-requirements.md`.
 
 Consolidated September 15, 2026. This document supersedes earlier statements that
 Progress Invoices, Change Orders, Contract Invoices, and Payment Schedule are
@@ -52,6 +55,10 @@ launcher.
 
 ## Contract and billing
 
+- Progress Invoicing is Contract-based from Estimate acceptance. Before an
+  Accepted CO, the Contract consists entirely of the Accepted Estimate; Accepted
+  COs revise that same Contract. The first Accepted CO does not migrate history,
+  reset progress, create a ledger, or introduce a second accounting model.
 - The canonical contract identity is Estimate #1008, with sequential #1008-CO1,
   #1008-CO2 documents. Previously separate fixture identities are normalized.
 - Gross Contract Scope is accepted line scope plus document-level Cost Plus. Contract
@@ -67,8 +74,10 @@ launcher.
   retain their actual billing. Selection omits non-billable scope.
 - One creation dialog and one invoice editor serve Estimate-only and CO-backed
   billing. CO-backed views repeat source headings and aligned column headings.
-- Per-line remaining and the overall contract balance both constrain creation
-  and manual entry. Contract progress and over-invoiced displays remain gross.
+- Per-line remaining and the Contract-level Remaining subtotal constrain creation
+  and manual entry. Remaining subtotal is gross available source scope before
+  discount; the separate Contract summary Remaining is net Contract Value less
+  Total Invoiced. Contract progress and over-invoiced displays remain gross.
 - Drafts reserve scope and share the retainage-release Draft lock. They do not
   contribute to posted billing. Creating remains on the numbered Draft. Invoice
   delivery and Send actions are outside the prototype.
@@ -80,11 +89,12 @@ launcher.
 - Standard conversion preserves the shared copy editor and removes the schedule;
   subsequent tracked billing and CO creation are unavailable.
 
-## Migrated UI
+## Unified tracked-invoice presentation
 
 The existing Progress Invoice editor retains its totals, discount pool, retainage,
-settings, and previews, with the Contract Invoice source hierarchy and projected
-summary migrated into it. Both HTML customer previews repeat source/column
+settings, and previews. When Accepted COs exist, the same Contract-based editor
+adds the established source hierarchy and contract-aware wording; this is a
+presentation variant rather than an accounting transition. Both HTML customer previews repeat source/column
 headings, preserve original historical billing, show the adjusted-completion
 asterisk when applicable, and show cumulative contract progress after totals.
 No duplicate invoice editor or customer preview remains.

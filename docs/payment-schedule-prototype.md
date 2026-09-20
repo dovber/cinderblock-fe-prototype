@@ -158,7 +158,7 @@ will convert the full estimate and remove the payment schedule.** **Cancel**
 returns to invoice-type selection without changing the schedule. **Create invoice**
 removes the schedule and opens the existing Standard Invoice editor with the full
 Estimate copied into it. Saving stays on the new invoice, marks the Estimate
-**CONVERTED**, preserves its clickable `Linked to Invoice #...` relationship, and
+**BILLED**, preserves its clickable `Linked to Invoice #...` relationship, and
 keeps the Payment Schedule removed. The flow reuses the established Standard
 Invoice editor and behavior. This early removal is an accepted visual shortcut in
 the prototype. Production persistence removes the schedule only when the Standard
@@ -168,7 +168,8 @@ Choosing **Progress invoice** opens the Progress Invoice scope dialog titled
 **What would you like to invoice?**. **Standard invoice** is not repeated there.
 When
 one or more unfulfilled milestones exist, its first option is **Select milestone**,
-followed by the existing rest-of-estimate/contract option when applicable,
+followed by the existing rest-of-estimate/contract presentation option with its
+gross **Remaining subtotal** when applicable,
 **Percent or amount**, and **Select items**. Without an unfulfilled milestone, the
 new option is omitted.
 
@@ -272,8 +273,9 @@ calculations. The explicit combined **Retainage — On acceptance** scenario fol
 `docs/retainage-prototype.md`: its milestone is fulfilled by the full gross
 Progress Invoice amount, while retainage reduces only the invoice amount due.
 
-The Contract Invoice form uses **The rest of this contract** and contract-wide
-source data after Accepted Change Orders. Customer PDF-style and weblink output
+After Accepted Change Orders, the same Contract-based Progress Invoice flow uses
+the contract-aware label **The rest of this contract** and contract-wide source
+data. Customer PDF-style and weblink output
 remain React-rendered HTML/CSS and retain their established progress columns. No
 real PDF, payment, acceptance, or external URL is created.
 
@@ -307,7 +309,8 @@ and **Create draft invoice for milestone 1**. This is one schedule setting;
 milestones do not receive individual controls.
 
 The section appears only while the Estimate is Draft or Pending. Once the Estimate
-is Accepted, Partially Converted, Converted, or otherwise past acceptance, the
+is Accepted, or displays the current Contract's Partially Billed or Billed
+tracked-billing state, or is otherwise past acceptance, the
 section is removed entirely and the modal proceeds directly from the milestone
 table and Add milestone action to its normal footer.
 

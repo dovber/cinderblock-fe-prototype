@@ -159,20 +159,26 @@ This section specifies future backend and integration behavior only. The fronten
 prototype must not add QBO API calls, sync controls, account selectors, mapping
 screens, setup errors, or other QBO UI for these requirements.
 
+The complete and authoritative QBO integration boundary, document mapping,
+concurrency protection, and conflict behavior are defined in
+[`quickbooks-online-sync-requirements.md`](quickbooks-online-sync-requirements.md).
+This section records the Retainage-specific accounting representation.
+
 ### Accounting representation
 
 Cinderblock keeps Retainage as a totals-level Progress Invoice adjustment and a
-Retainage release as a dedicated Invoice for previously withheld money. QBO may
-represent both through one company-level Product/Service item named
-**Retainage**, mapped to the appropriate **Retainage Receivable** account. The
-same mapped item must be reused for every retainage rate, Progress Invoice,
-Retainage release, and accepted Change Order. Do not create rate-specific or
-release-specific Retainage items.
+Retainage release as a dedicated Invoice for previously withheld money. The QBO
+transaction uses dedicated line names with the normal Product/Service and account
+mapping rules. Withheld Retainage uses **Retainage**; a release uses
+**Retainage release**. The exact mapping configuration, including whether both
+lines may share an account, requires accounting and QBO validation before
+production implementation. Do not create rate-specific items.
 
 The line sign defines the transaction:
 
-- a negative Retainage line records retainage withheld on a Progress Invoice;
-- a positive Retainage line records retainage made due on a release Invoice.
+- a negative **Retainage** line records retainage withheld on a Progress Invoice;
+- a positive **Retainage release** line records retainage made due on a release
+  Invoice.
 
 This QBO accounting representation must not be exposed as a product/service line
 in Cinderblock's internal or customer-facing Invoice item table.
@@ -181,9 +187,9 @@ in Cinderblock's internal or customer-facing Invoice item table.
 
 A Progress Invoice must sync its contract/work lines at their actual billed
 quantities, rates, and gross amounts. The integration then appends one negative
-Retainage line for the actual retainage stored on that Invoice. It must not reduce
-or proportionally allocate retainage across service, material, Change Order, or
-milestone lines.
+**Retainage** line with Qty `1` for the actual retainage stored on that Invoice.
+It must not reduce or proportionally allocate retainage across service, material,
+Change Order, or milestone lines.
 
 For example, $10,000 of billed work with $1,000 retained syncs conceptually as:
 
@@ -200,12 +206,12 @@ must never be recalculated from the Estimate's current Retainage setting.
 
 ### Retainage release sync
 
-A Retainage release Invoice must sync only one positive Retainage item line using
-the release amount persisted on that Invoice:
+A Retainage release Invoice must sync only one positive **Retainage release**
+item line using Qty `1` and the release amount persisted on that Invoice:
 
 ```text
-Retainage      +$1,000
-Invoice total   $1,000
+Retainage release  +$1,000
+Invoice total      $1,000
 ```
 
 The integration must not resend contract work, Estimate lines, Change Order
@@ -218,13 +224,13 @@ progress, Payment Schedule, or earlier Invoice totals.
 
 ### Mapping and sync validation
 
-If an Invoice contains Retainage and the company-level QBO Retainage mapping is
-missing, sync must block or fail using the existing integration setup/error
-pattern. It must not silently omit Retainage or map it to a normal revenue item.
-The conceptual setup message is **Set up QuickBooks retainage before syncing this
-invoice.**
+If an Invoice contains Retainage and its required QBO mapping is missing, sync
+must block or fail using the existing integration setup/error pattern. It must
+not silently omit Retainage or map it to an unrelated normal revenue item. The
+conceptual setup message is **Set up QuickBooks retainage before syncing this
+invoice.** The Retainage release mapping requires equivalent validation.
 
-QBO tax configuration for the Retainage item must preserve the Cinderblock
+QBO tax configuration for both Retainage line types must preserve the Cinderblock
 Invoice total and avoid an unintended second tax event. The backend must use the
 persisted Cinderblock amounts rather than independently recalculating Retainage in
 QBO.
@@ -232,7 +238,8 @@ QBO.
 Backend implementation must verify current QBO API capabilities at implementation
 time and must not assume QBO provides a native invoice-level retainage field. The
 safe requirements model remains gross work lines plus one negative Retainage item
-for Progress Invoices, and one positive Retainage item only for release Invoices.
+for Progress Invoices, and one positive Retainage release item only for release
+Invoices.
 
 ### Cinderblock invariants
 

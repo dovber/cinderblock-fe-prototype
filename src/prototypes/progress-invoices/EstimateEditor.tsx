@@ -30,7 +30,7 @@ export function EstimateEditor({ state, mode, initialSection, scenarioControl, o
   const originalContractValue = acceptedValue({ ...state, orders: [] })
   const lines = billingLines(state)
   const showContractSummary = state.invoices.length > 0 || state.orders.length > 0 || state.releases.length > 0
-  const status = state.standardInvoice ? 'CONVERTED' : !state.accepted ? state.preAcceptanceStatus ?? 'PENDING' : grossInvoiced >= grossScope ? 'CONVERTED' : grossInvoiced > 0 ? 'PARTIALLY CONVERTED' : 'ACCEPTED'
+  const status = state.standardInvoice ? 'BILLED' : !state.accepted ? state.preAcceptanceStatus ?? 'PENDING' : grossInvoiced >= grossScope ? 'BILLED' : grossInvoiced > 0 ? 'PARTIALLY BILLED' : 'ACCEPTED'
   const invoiceUnavailable = draft || (grossInvoiced >= grossScope && !(mode === 'retainage' && held > 0))
   const estimateLocked = state.invoices.length > 0 || state.orders.length > 0 || Boolean(state.standardInvoice)
   const estimateLockReason = state.standardInvoice

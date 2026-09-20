@@ -1,6 +1,6 @@
 # Current prototype state
 
-Updated September 17, 2026. This is the compact handoff for starting a fresh
+Updated September 18, 2026. This is the compact handoff for starting a fresh
 Codex task in the existing project directory. It summarizes where to look; the
 linked requirement documents remain authoritative for detailed product behavior.
 
@@ -57,6 +57,7 @@ data and product-specific behavior inside the owning prototype.
 - Consolidation: `docs/contract-lifecycle-prototype.md` (supersedes old independent-module descriptions)
 - Canonical business rules: `docs/contract-billing-business-rules.md` (supersedes conflicting lifecycle and financial wording)
 - Normative financial engineering spec: `docs/contract-billing-financial-spec.md`
+- QuickBooks Online sync: `docs/quickbooks-online-sync-requirements.md` (authoritative integration boundary, document mapping, and conflict safeguards)
 
 - Progress Invoices: `docs/progress-invoices-prototype.md`
 - Change Orders: `docs/change-orders-requirements.md`
@@ -79,6 +80,21 @@ do not introduce an unresolved user-facing interaction.
 
 ## Shared decisions already established
 
+- Progress Invoicing is Contract-based from Estimate acceptance. Before an
+  Accepted CO, Contract equals the Accepted Estimate; Accepted COs revise the same
+  Contract without creating a new ledger, migrating history, or resetting
+  progress. Contract Invoice is a source-grouped presentation variant of this
+  same tracked flow, not a second accounting model.
+- Contract billing status belongs to the current Contract: Accepted before
+  posted tracked billing, Partially Billed while posted billing exists and
+  current scope remains, and Billed when posted billing exists and no current
+  scope remains. An Accepted
+  CO can return a Billed Contract to Partially Billed. CO approval lifecycle
+  state and Standard Invoice conversion remain separate concepts.
+- The Progress Invoice creation flow's Not yet invoiced / Remaining subtotal is
+  gross Contract scope available before discount and after applicable Draft
+  reservations. It is separate from net Contract-summary Remaining and from the
+  Contract Discount Pool.
 - Estimates and Change Orders use the full-screen Estimate-style document editor.
 - Estimate and Change Order document item tables do not show line-level `% Complete`.
 - Progress Invoice and Contract Invoice editors do show line-level `% Complete`.
@@ -96,7 +112,7 @@ do not introduce an unresolved user-facing interaction.
   **Create invoice** when setup is complete and the unsaved New Invoice editor
   opens. The editor also uses **Create invoice** to persist the completed invoice.
   This repeated label is intentional and is not an audit ambiguity.
-- A Standard Invoice copied from an Estimate marks that Estimate Converted. Once
+- A Standard Invoice copied from an Estimate marks that Estimate Billed. Once
   this path is used, Progress Invoices and Change Orders are unavailable for it.
 - The prototype demonstrates the Standard Invoice choice and conversion result;
   the existing product's complete Standard Invoice lifecycle is out of scope.
@@ -166,10 +182,10 @@ Retainage scenarios cover defaults, invoice overrides, accumulated and partial
 release history, the shared Draft lock, and a fully invoiced contract with held
 retainage. They reuse the shared Payment Schedule card and milestone-aware Progress
 Invoice creation. Retainage release stays a contract-level amount and never uses
-line-item or milestone release allocation. `docs/retainage-prototype.md` also
-defines the future QBO accounting contract: gross work lines plus one negative
-mapped Retainage item on Progress Invoices, and one positive Retainage item only
-on release Invoices. Those rules are documentation-only; no QBO frontend or sync
+line-item or milestone release allocation.
+`docs/quickbooks-online-sync-requirements.md` defines the future QBO accounting
+contract, including Retainage line representation and post-sync conflict
+safeguards. Those rules are documentation-only; no QBO frontend or sync
 implementation exists in this prototype.
 
 ### Change Orders
@@ -182,9 +198,11 @@ effects, over-invoiced presentation, Delete Draft, Cancel Pending, scenario cont
 and live contract-aware invoice creation from the same state. Consult the requirements before changing lifecycle or
 contract math because this module contains many finalized interaction decisions.
 
-### Contract-aware billing (consolidated)
+### Contract-aware Progress billing (consolidated)
 
-Migrated into the Progress Invoice editor; implements tracked billing across the accepted Estimate and Accepted Change Orders.
+The Progress Invoice editor implements tracked billing against the Contract from
+Estimate acceptance onward. Accepted Change Orders extend the same Contract and
+enable its source-grouped presentation.
 The editor groups lines by source document, preserves historical billing attribution,
 keeps non-billable adjustment lines visible, provides live contract progress, and
 has HTML PDF-style and customer web previews.

@@ -3,11 +3,20 @@
 > Canonical posting, financial definitions, discount-pool behavior, cancellation,
 > concurrency, and permissions are defined in
 > `docs/contract-billing-business-rules.md` and supersede conflicting wording here.
+> QuickBooks Online line mapping and post-sync safeguards are defined in
+> `docs/quickbooks-online-sync-requirements.md`.
 
 Consolidation update: these requirements now run inside the unified contract
 lifecycle. See [current ownership and integration rules](contract-lifecycle-prototype.md).
 Earlier independent-sandbox and deferred-retainage statements are superseded by
 that integration; the detailed document behavior below remains applicable.
+
+Progress Invoicing is Contract-based from the moment an Estimate is Accepted.
+Before any Accepted Change Order, that Contract consists entirely of the Accepted
+Estimate. Accepted Change Orders revise the same Contract; they do not start a
+new accounting model, ledger, or billing history. Estimate-only and CO-backed
+states use the same tracked Progress billing rules and preserve source-line
+lineage.
 
 Status: implemented as a local frontend lifecycle prototype. Open Estimates, then
 **Open progress invoices prototype**. The implementation includes six mock
@@ -55,7 +64,7 @@ Enter from the existing Estimates area. An accepted estimate with no Progress
 Invoice history exposes **Create invoice**. That action opens **What do you want
 to invoice?** with **Standard invoice** and **Progress invoice** radio options.
 Only the selected type shows its helper: **Invoice the full estimate without progress tracking** for
-Standard invoice or **Invoice part of the estimate** for Progress invoice.
+Standard invoice or **Invoice part of the contract** for Progress invoice.
 Cancel closes the dialog. With Standard invoice selected, the primary action is
 **Create invoice** and immediately opens the unsaved Standard Invoice editor;
 there is no intermediate setup step. With Progress invoice selected, the primary
@@ -69,7 +78,7 @@ The release option appears last only while previously withheld funds have an
 unreleased balance greater than zero. The Progress invoice flow continues to offer
 **Select items**, which opens
 the existing shared item-selection step directly.
-Provide easily accessible mock scenarios using consistent estimate lines:
+Provide easily accessible mock scenarios using consistent Contract source lines:
 
 - Not yet invoiced: every line has zero Previously Billed.
 - Partially invoiced: prior billing exists and eligible lines have value remaining.
@@ -118,15 +127,15 @@ entirely when it is absent. Generated schedule labels are not invoice milestone
 names and do not appear on these invoice surfaces.
 
 Use the referenced choice dialog with mutually exclusive options. The available
-choices depend on whether the estimate already has Progress Invoice history.
+choices depend on whether the Contract already has Progress Invoice history.
 
 For the first Progress Invoice, show only:
 
 1. **Percent or amount**: reveal a compact **% / $ switcher** and one input.
    Percentage and dollars are modes of this same option, not different flows.
-   For the first Progress Invoice, show **Estimate total: $X**. For subsequent
-   Progress Invoices, show **Remaining: $X** using the active scenario's actual
-   remaining mock amount.
+   For the first Progress Invoice, show **Contract subtotal: $X**. For subsequent
+   Progress Invoices, show **Remaining subtotal: $X** using the active scenario's
+   actual gross, pre-discount remaining Contract scope.
 2. **Select items**: continue to item selection.
 
 Do not show a full-estimate or rest-of-estimate choice for the first Progress
@@ -134,20 +143,25 @@ Invoice. Entering this workflow for the first time starts partial, tracked billi
 
 For subsequent Progress Invoices, show these choices in order:
 
-1. **The rest of this estimate**, with the helper **Remaining: $X**: populate
-   This Invoice with every eligible line's remaining amount.
+1. **The rest of this estimate**, with the helper **Remaining subtotal: $X**:
+   populate This Invoice with every eligible Contract source line's remaining
+   amount. This pre-CO label is legitimate presentation because the Contract
+   consists entirely of the Accepted Estimate; it does not define an
+   Estimate-level accounting model. When Accepted COs exist, the corresponding
+   label is **The rest of this contract**.
 2. **Percent or amount**, retaining the same % / $ behavior and applying
    against eligible remaining scope.
 3. **Select items**, retaining full-remaining billing for
    each selected eligible line.
 
-Only the selected radio option expands. The rest option shows **Remaining: $X**
+Only the selected radio option expands. The rest option shows **Remaining subtotal: $X**
 only while selected. Percent or amount shows its contextual helper and controls
 only while selected. Select items has no supporting text on this step.
 
 For a subsequent Progress Invoice in percentage mode, show both remaining value
-and the maximum remaining percentage as **Remaining: $X · Y%**. Derive both from
-the active scenario. In dollar mode, show **Remaining: $X**. Existing inline
+and the maximum remaining percentage as **Remaining subtotal: $X · Y%**. Derive
+both from the active Contract state. In dollar mode, show **Remaining subtotal:
+$X**. Existing inline
 validation must reject a percentage above the displayed remaining limit.
 
 The scope-selection step uses **Continue** because a milestone or item-selection
@@ -161,8 +175,9 @@ workflow determines the document type rather than the billed amount.
 Cancel returns to the originating estimate context without creating anything.
 Changing the selected option updates its conditional controls and primary action.
 
-Percentage applies across all eligible estimate items and is distributed
-accordingly. Retain the reference's original-estimate percentage basis and
+Percentage applies across all eligible accepted Contract source lines and is
+distributed accordingly. Before any Accepted CO, those source lines all belong
+to the Accepted Estimate. Retain the reference's original-contract percentage basis and
 remaining-percentage context; it is not a selected-items-only percentage or a
 percentage that is silently redefined as a percentage of remaining balance.
 Fully invoiced items are ineligible for additional billing.
@@ -174,8 +189,8 @@ and avoid allocating beyond a line's remaining amount; unequal prior billing
 does not justify production allocation machinery.
 
 Required input states: empty, focused, valid, over remaining allowance, and
-corrected after an error. Use the reference's inline error **Exceeds remaining
-estimate value**. Block invalid submission; blank, nonnumeric, zero, and negative
+corrected after an error. Use the inline error **Exceeds remaining subtotal**.
+Block invalid submission; blank, nonnumeric, zero, and negative
 entries must not create an invoice. Do not introduce an error dialog. Preserve
 the entered value while it is being corrected. Mode switching must update the
 unit and contextual remaining allowance without treating a dollar value as a
@@ -204,9 +219,11 @@ labeled **Fully invoiced**.
 
 ## Resulting progress invoice editor
 
-Every creation method converges on the same editor. **All estimate lines appear**,
-including unselected and fully invoiced lines with **$0 in This Invoice**. Do not
-filter the editor to only the lines being billed.
+Every creation method converges on the same editor. **All accepted Contract source
+lines appear**, including unselected and fully invoiced lines with **$0 in This
+Invoice**. Before any Accepted CO these are the Accepted Estimate lines; after
+Accepted COs they retain their Estimate or CO source grouping. Do not filter the
+editor to only the lines being billed.
 
 Preserve item identity/descriptions and Qty separately where appropriate. The
 financial columns, in order, are:
@@ -256,7 +273,7 @@ The invoice editor displays those resolved tax facts as inherited, read-only
 information. The Progress/Contract Invoice flow cannot override the contractual
 tax rate or component taxability.
 
-### Estimate discount pool
+### Contract discount pool
 
 After ad-hoc scope selection, **Payment milestone** explains **Optional. Add a
 milestone name to describe what this payment is for.** Its **Milestone name**
@@ -316,12 +333,12 @@ not appear. The invoice Details block retains a document-level **Linked to Estim
 synchronization, consumption, or progress calculation against the estimate.
 
 For this local prototype, creating the copied invoice marks the source estimate
-**CONVERTED** regardless of subsequent edits to the copied invoice. Cancel leaves
+**BILLED** regardless of subsequent edits to the copied invoice. Cancel leaves
 the estimate unchanged. Saving assigns the mock document number **Invoice #100501**
 and transitions the mounted editor from **New invoice** to the saved Draft
 **Invoice #100501** without navigating away. The source Estimate is updated in
 local state at the same time. When the contractor explicitly closes the invoice,
-the Converted Estimate shows the clickable invoice reference under **Linked to**,
+the Billed Estimate shows the clickable invoice reference under **Linked to**,
 using only the link icon and document ID. Opening the reference returns to the
 saved standard invoice with its edited lines and invoice details preserved. Before
 the standard invoice exists, the Estimate does not render an empty **Linked to**
@@ -406,7 +423,7 @@ This document-creation navigation rule applies consistently to Standard, Progres
 and Contract Invoice creation: creating transitions the open editor to its saved
 Draft document; only an explicit close returns to the originating Estimate.
 
-## Estimate progress and linked invoices
+## Contract progress on the Estimate and linked invoices
 
 The originating estimate uses the same full-screen editor skeleton as the supplied
 Estimate reference: editor header and actions, section tabs, Details block, normal
@@ -432,7 +449,8 @@ progress**, and the progress bar. Contract value means the Accepted Estimate
 total plus the net deltas of all Accepted Change Orders; Draft and Pending Change
 Orders never affect it. The current Progress Invoice scenarios have no Accepted
 Change Orders, so their Contract value equals the Accepted Estimate total.
-Remaining derives from Contract Value and Total Invoiced. Contract Progress
+The summary's net Remaining derives from Contract Value and Total Invoiced. It is
+distinct from the gross, pre-discount Remaining subtotal in invoice creation. Contract Progress
 derives from posted Gross Contract Scope consumed divided by Gross Contract
 Scope; discount does not count as completed work. A saved Draft reserves its
 selected scope but is excluded
@@ -457,8 +475,8 @@ not create revisions or automatically notify the customer. The contractor may
 send or share the updated invoice through the existing behavior. Partially
 paid and Paid invoices reopen locked. At most one linked
 invoice may be Draft. When a Draft exists, the Estimate shows no dedicated draft
-action and does not offer creation of a second Draft. When all carried estimate
-value is allocated, creation is disabled.
+action and does not offer creation of a second Draft. When all accepted Contract
+source scope is allocated, creation is disabled.
 
 The same chronology rule governs cancellation: only the latest active
 tracked invoice can be financially reversed, subject to normal payment rules. A
@@ -467,15 +485,25 @@ invoice exists. Its payment activity remains available under ordinary payment
 rules; applying, voiding, refunding, or unapplying a payment does not reverse its
 contract allocations or make that earlier invoice editable again.
 
-Estimate status follows billing state: Not yet invoiced is **ACCEPTED**; partial and
-individual-line progress are **PARTIALLY CONVERTED**; fully invoiced is **CONVERTED**.
+Contract billing status belongs to the current Contract. With no posted
+tracked billing it is **ACCEPTED**; with posted billing and remaining current
+Contract scope it is **PARTIALLY BILLED**; with posted tracked billing and no
+remaining current Contract scope it is **BILLED**. A Draft reservation alone
+does not change the status.
+If a positive Accepted CO adds scope after full conversion, the Contract returns
+to **PARTIALLY BILLED** without rewriting prior billing. The original Estimate
+and every Accepted CO reflect this Contract billing status wherever Contract
+billing state is presented. CO approval lifecycle state remains a
+separate accepted fact.
 
 ## Cross-workflow billing mode
 
 Invoice type is fixed by the chosen path. Once a Progress Invoice exists, Standard
-invoice creation against the Estimate is disabled. When the contract receives its
-first Accepted Change Order, future tracked invoice creation routes automatically
-to the Contract Invoice flow; the contractor does not choose or manage this switch.
+invoice creation against the Estimate is disabled. The first Accepted Change
+Order does not switch accounting models: future tracked invoices continue against
+the same Contract, ledger, history, and pools. The product may automatically use
+the established Contract Invoice presentation variant—Contract wording and
+Estimate/CO source groupings—without asking the contractor to choose a mode.
 
 Successfully saving a Standard Invoice Draft from an otherwise uninvoiced
 Estimate creates the exclusive conversion lock. Entering or abandoning the
@@ -523,8 +551,9 @@ composition/navigation between independent prototypes; no cross-prototype import
 Do not modify the shared shell to implement feature behavior.
 
 Check each creation method against the required scenarios. Verify that the first
-invoice omits the rest-of-estimate option and subsequent invoices show it with
-the **Remaining: $X** helper. Verify the
+invoice omits the rest-of-estimate option and subsequent invoices show the
+applicable rest-of-estimate/contract label with the **Remaining subtotal: $X**
+helper. Verify the
 switcher, conditional actions, inline correction, selection counts, disabled rows,
 back/cancel behavior, and all-lines editor display. Verify prior billing stays
 unchanged as the current invoice changes and completion reflects both values.
