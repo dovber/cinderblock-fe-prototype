@@ -70,6 +70,13 @@ the availability ledger. Availability separately accounts for all posted
 allocations, active Draft reservations, current accepted scope, and applicable
 Change Order supersession.
 
+Each saved tracked invoice persists the accepted Contract revision and
+source-line financial snapshot used to create it. Later Contract revisions affect
+only future invoices and current Contract summaries. Reopening, editing,
+exporting, or sharing an earlier invoice must not add later source lines or change
+its recorded Contract Amounts, quantities, allocations, tax facts, Cost Plus
+facts, or other financial values.
+
 Financial edits are audited with sufficient before/after detail. Current invoice
 state is authoritative for customer rendering. No separate customer-facing
 revision object or parallel invoice version workflow is created.
@@ -460,6 +467,22 @@ Standard Invoices.
 Conversion takes effect only after the Standard Invoice Draft saves successfully.
 While an active Standard Invoice exists, the Estimate is Billed and tracked
 invoicing, Change Orders, and the applicable Payment Schedule path are disabled.
+An Estimate may have at most one active Standard Invoice relationship. This is a
+domain invariant, not only an invoice-creation UI restriction. It applies when a
+Standard Invoice is created from an Estimate and whenever an existing Invoice is
+linked or relinked to an Estimate as its Standard Invoice, including through an
+API, import, or future automation path. Every such operation must reject the
+relationship when the Estimate already has an active Standard Invoice or tracked
+Progress Invoice history.
+
+Linking an existing Invoice to an otherwise eligible Estimate as its Standard
+Invoice establishes the same relationship, Billed status, conversion lock, and
+existing Payment Schedule transaction behavior as direct Standard Invoice
+creation. The relationship must be established atomically so the Invoice link,
+Estimate status, lock, and schedule state cannot diverge. Merely sharing a
+customer or job does not establish the Standard Invoice relationship or change
+the Estimate's billing state.
+
 Deleting the Draft or canceling the invoice removes the conversion lock,
 subject to the normal constraints. History and the consumed invoice number stay.
 The prototype may visually remove a Payment Schedule when the user confirms the

@@ -70,7 +70,10 @@ applicable, independent taxability, supersession lineage, and financial status.
 Each invoice source allocation needs at minimum:
 
 - invoice ID and immutable billing-sequence key;
+- accepted contract revision captured when the invoice is created;
 - source contract-line ID and source contract revision;
+- saved source-line presentation and financial facts required to render the
+  historical invoice without rebuilding it from the current Contract;
 - gross base amount billed;
 - Cost Plus amount billed and its related base line;
 - discount allocated to base and Cost Plus;

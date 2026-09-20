@@ -262,6 +262,11 @@ STDINV = [
     ("STDINV-020", "Conditional customer fee", "When Cost Plus does not apply, no Cost plus fee line or zero-value Cost Plus placeholder appears."),
     ("STDINV-021", "Customer content", "Customer PDF and Web Link use the invoice's customer, job, dates, lines, public note, attachments, terms, status, payment information, and applicable discount and tax."),
     ("STDINV-022", "Preview availability", "PDF preview and Customer web preview are hidden in every unsaved New Invoice state and appear in their existing location only after the invoice is saved."),
+    ("STDINV-023", "Single active Standard Invoice", "An Estimate may have at most one active Standard Invoice relationship. A prior Standard Invoice that was deleted or canceled no longer counts as active, but its history remains preserved under existing rules."),
+    ("STDINV-024", "All entry points", "The single-active-Standard-Invoice invariant is enforced by the domain across direct creation, linking or relinking an existing Invoice, API and import operations, and future automation. It must not rely only on the Estimate invoice-creation UI."),
+    ("STDINV-025", "Relationship eligibility", "Any operation that establishes a Standard Invoice relationship must reject the relationship when the Estimate already has an active Standard Invoice or tracked Progress Invoice history."),
+    ("STDINV-026", "Existing Invoice linking", "Linking an existing Invoice to an otherwise eligible Estimate as its Standard Invoice atomically establishes the Linked Estimate relationship, Billed status, conversion lock, and existing Payment Schedule transaction behavior used by direct Standard Invoice creation."),
+    ("STDINV-027", "Non-source association", "Sharing a customer or job does not by itself establish a Standard Invoice relationship, mark the Estimate Billed, or lock its billing paths."),
 ]
 
 PROGINV = [
@@ -309,6 +314,7 @@ PROGINV = [
     ("PROGINV-042", "Change Order acceptance collision", "Accepting a Change Order while a tracked Draft exists cancels that Draft, releases its reservations, preserves it read-only in history, and requires a new invoice against the revised Contract."),
     ("PROGINV-043", "Accepted revision lock", "Accepting a Contract revision financially locks earlier Open tracked invoices. New or changed scope must be billed on a new invoice and cannot be added retroactively."),
     ("PROGINV-044", "Final unused discount warning", "Opening the invoice that consumes the final gross scope while discount remains available shows the unused discount and resulting over-invoiced amount, permits continuation, and applies no discount automatically."),
+    ("PROGINV-045", "Historical Contract snapshot", "Each saved tracked invoice persists the accepted Contract revision and source-line financial snapshot used to create it. Later Contract revisions affect only future invoices and current Contract summaries. Reopening, editing, exporting, or sharing an earlier invoice must not add later source lines or change its recorded Contract Amounts, quantities, allocations, discount, tax, Cost Plus, retainage, or other financial values."),
 ]
 
 CO = [
@@ -494,6 +500,9 @@ VALID = [
     ("VALID-018", "Stale acceptance link", "Reject customer acceptance when the link does not represent the current acceptable Estimate or Change Order revision."),
     ("VALID-019", "QBO divergence", "Block a risky QBO write when the mapped transaction materially differs from the last successful sync and create a Sync conflict state."),
     ("VALID-020", "QBO retry ambiguity", "Do not retry an ambiguous QBO create or update until lookup or idempotency evidence prevents duplication."),
+    ("VALID-021", "Second active Standard Invoice", "Reject creation or linking of a second active Standard Invoice relationship for the same Estimate."),
+    ("VALID-022", "Alternate Standard Invoice entry path", "Apply the same Standard Invoice eligibility and lock rules to direct creation, linking, relinking, API, import, and automation paths."),
+    ("VALID-023", "Standard Invoice after tracked billing", "Reject creation or linking of a Standard Invoice when the Estimate has tracked Progress Invoice history."),
 ]
 
 
@@ -710,6 +719,7 @@ def add_validation_table(doc):
         "Hard block", "Hard block", "Hard block", "Warning", "Hard block",
         "Hard block", "Warning", "Hard block", "Hard block", "Warning",
         "Hard block", "Hard block", "Hard block", "Hard block", "Hard block",
+        "Hard block", "Hard block", "Hard block",
     ]
     rows = [(rid, title, body, types[i]) for i, (rid, title, body) in enumerate(VALID)]
     add_table(doc, ["ID", "Condition", "Product result", "Type"], rows, widths=[0.85, 1.65, 3.8, 0.9], font_size=7.5)

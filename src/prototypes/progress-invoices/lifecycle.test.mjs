@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { acceptChangeOrder, acceptSavedChangeOrder, acceptedValue, availableContractDiscount, billingLines, cancelLifecycleInvoice, contractDiscountPool, contractScope, currentContractRevision, draftInvoice, draftReservedValue, grossContractScope, hasDraft, historicalTaxCreditGenerated, initialLifecycle, invoiceAmounts, isTrackedInvoiceFinanciallyEditable, lifecycleScenarios, regularScenarios, regularScenarioState, saveLifecycleInvoice, taxCreditBalance, toChangeOrderSources, totalBilled, totalGrossBilled, trackedInvoiceFinancialLockReason } from './lifecycle.ts'
+import { acceptChangeOrder, acceptSavedChangeOrder, acceptedValue, availableContractDiscount, billingLines, cancelLifecycleInvoice, contractDiscountPool, contractScope, currentContractRevision, draftInvoice, draftReservedValue, grossContractScope, hasDraft, historicalTaxCreditGenerated, initialLifecycle, invoiceAmounts, invoiceSnapshotLines, isTrackedInvoiceFinanciallyEditable, lifecycleScenarios, regularScenarios, regularScenarioState, saveLifecycleInvoice, taxCreditBalance, toChangeOrderSources, totalBilled, totalGrossBilled, trackedInvoiceFinancialLockReason } from './lifecycle.ts'
 import { blankAdjustmentLine, changeOrderCostPlus, changeOrderImpact, hasMeaningfulAdjustment, newChangeOrder } from './change-orders/model.ts'
 import { invoiceRetainageWithheld, sum } from './model.ts'
 import { milestoneAmount } from './schedule/model.ts'
@@ -423,6 +423,25 @@ test('regular selector scenarios expose the requested contract states', () => {
   assert.equal(oneOrder.orders.length, 1)
   assert.equal(oneOrder.invoices[0].milestoneName, 'Deposit')
   assert.equal(oneOrder.milestones.find(item => item.invoiceId === '100501')?.name, 'Deposit')
+  assert.equal(oneOrder.invoices[0].contractRevision, 0)
+  assert.ok(invoiceSnapshotLines(oneOrder.invoices[0], contractScope(oneOrder)).every(line => line.sourceId === 'estimate'))
+
+  const orderWithInvoices = regularScenarioState('regular-change-order-invoices')
+  assert.equal(acceptedValue(orderWithInvoices), 110000)
+  assert.equal(orderWithInvoices.orders.length, 1)
+  assert.equal(orderWithInvoices.invoices.length, 2)
+  const [deposit, laterInvoice] = orderWithInvoices.invoices
+  const depositLines = invoiceSnapshotLines(deposit, contractScope(orderWithInvoices))
+  const progressLines = invoiceSnapshotLines(laterInvoice, contractScope(orderWithInvoices))
+  assert.deepEqual([deposit.contractRevision, laterInvoice.contractRevision], [0, 1])
+  assert.equal(sum(depositLines.map(line => line.contract)), 100000)
+  assert.equal(sum(progressLines.map(line => line.contract)), 110000)
+  assert.ok(depositLines.every(line => line.sourceId === 'estimate'))
+  assert.ok(progressLines.some(line => line.sourceId === '1008-CO1'))
+  assert.equal(sum(progressLines.map(line => line.previous)), 10000)
+  assert.equal(sum(laterInvoice.lineAmounts), 30000)
+  assert.ok(laterInvoice.lineAmounts[progressLines.findIndex(line => line.sourceId === '1008-CO1')] > 0)
+  assert.equal(sum(progressLines.filter(line => line.kind === 'active').map(line => line.contract - line.previous - laterInvoice.lineAmounts[progressLines.indexOf(line)])), 70000)
 
   const multipleOrders = regularScenarioState('regular-multiple-change-orders')
   assert.equal(acceptedValue(multipleOrders), 117500)
@@ -471,6 +490,7 @@ test('every Regular Estimate progress invoice has one matching historical milest
     'regular-progress',
     'regular-fully-invoiced',
     'regular-change-order',
+    'regular-change-order-invoices',
     'regular-multiple-change-orders',
     'regular-fully-invoiced-change-orders',
     'regular-over-invoiced-change-order',

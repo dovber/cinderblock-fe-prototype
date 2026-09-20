@@ -33,7 +33,7 @@ export const lifecycleScenarios = [
   ...contractScenarios.map(item => ({ id: `contract-${item.id}`, label: item.label })),
   ...scheduleScenarios.map(item => ({ id: `schedule-${item.id}`, label: `Payment schedule — ${item.label}` })),
 ]
-export type RegularScenarioId = 'regular-no-invoices' | 'regular-tax' | 'regular-cost-plus' | 'regular-discount' | 'regular-progress' | 'regular-fully-invoiced' | 'regular-change-order' | 'regular-multiple-change-orders' | 'regular-fully-invoiced-change-orders' | 'regular-over-invoiced-change-order' | 'regular-payment-schedule' | 'regular-payment-schedule-draft' | 'regular-payment-schedule-progress' | 'regular-payment-schedule-over-allocated'
+export type RegularScenarioId = 'regular-no-invoices' | 'regular-tax' | 'regular-cost-plus' | 'regular-discount' | 'regular-progress' | 'regular-fully-invoiced' | 'regular-change-order' | 'regular-change-order-invoices' | 'regular-multiple-change-orders' | 'regular-fully-invoiced-change-orders' | 'regular-over-invoiced-change-order' | 'regular-payment-schedule' | 'regular-payment-schedule-draft' | 'regular-payment-schedule-progress' | 'regular-payment-schedule-over-allocated'
 export const regularScenarios: { id: RegularScenarioId; label: string }[] = [
   { id: 'regular-no-invoices', label: 'No invoices' },
   { id: 'regular-tax', label: 'Estimate w/ tax' },
@@ -42,6 +42,7 @@ export const regularScenarios: { id: RegularScenarioId; label: string }[] = [
   { id: 'regular-progress', label: 'With progress invoice' },
   { id: 'regular-fully-invoiced', label: 'Fully invoiced' },
   { id: 'regular-change-order', label: 'With change order' },
+  { id: 'regular-change-order-invoices', label: 'With Change Order + Invoices' },
   { id: 'regular-multiple-change-orders', label: 'With multiple change orders' },
   { id: 'regular-fully-invoiced-change-orders', label: 'Fully invoiced w/ change orders' },
   { id: 'regular-over-invoiced-change-order', label: 'Over invoiced w/ change order' },
@@ -54,6 +55,9 @@ const originalScope = (lines: EstimateLine[]) => lines.map(line => ({ ...line, p
 export const toChangeOrderSources = (lines: EstimateLine[]): ChangeOrderSource[] => lines.map(line => ({ id: line.id, name: line.name, description: line.description ?? '', qty: line.qty, price: line.contract / line.qty, cost: line.contract / line.qty * .7, markup: 42.86 }))
 export function invoiceAmounts(invoice: ProgressInvoice, lines: EstimateLine[]) {
   return Object.fromEntries((invoice.lineIds ?? lines.map(line => line.id)).map((id, index) => [id, invoice.lineAmounts[index] ?? 0]))
+}
+export function invoiceSnapshotLines(invoice: ProgressInvoice, fallback: EstimateLine[]) {
+  return (invoice.lineSnapshot ?? fallback).map(line => ({ ...line }))
 }
 export const isPosted = (invoice: ProgressInvoice) => invoice.status !== 'Draft' && invoice.status !== 'Canceled'
 export const totalGrossBilled = (state: LifecycleState) => sum(state.invoices.filter(isPosted).flatMap(invoice => invoice.lineAmounts))
@@ -296,10 +300,21 @@ export function regularScenarioState(id: RegularScenarioId): LifecycleState {
   if (id === 'regular-progress') state.invoices = [regularPostedInvoice(state, 25000, '100501')]
   if (id === 'regular-discount') state.discount = 10000
   if (id === 'regular-fully-invoiced') state.invoices = regularFullyInvoicedProgression(state)
-  if (id === 'regular-change-order' || id === 'regular-multiple-change-orders' || id === 'regular-fully-invoiced-change-orders') {
+  if (id === 'regular-change-order' || id === 'regular-change-order-invoices' || id === 'regular-multiple-change-orders' || id === 'regular-fully-invoiced-change-orders') {
+    const deposit = regularPostedInvoice(state, 10000, '100501', { id: 'deposit', name: 'Deposit' })
     state.orders = regularAcceptedOrders(id === 'regular-multiple-change-orders' ? 2 : 1)
     state.contractRevision = acceptedOrders(state.orders).length
-    state.invoices = [regularPostedInvoice(state, 10000, '100501', { id: 'deposit', name: 'Deposit' })]
+    state.invoices = [deposit]
+  }
+  if (id === 'regular-change-order-invoices') {
+    const revisedLines = billingLines(state)
+    state.invoices.push({
+      ...draftInvoice(state, revisedLines, allocate(revisedLines, 30000), 0, { id: 'progress-1', name: 'Progress 1' }),
+      id: '100502',
+      status: 'Open',
+      invoiceDate: '2026-09-18',
+      dueDate: '2026-10-18',
+    })
   }
   if (id === 'regular-fully-invoiced-change-orders') {
     const remainingLines = billingLines(state)
@@ -309,6 +324,7 @@ export function regularScenarioState(id: RegularScenarioId): LifecycleState {
   if (id === 'regular-over-invoiced-change-order') {
     state.invoices = regularOverInvoicedProgression(state)
     state.orders = [regularReducingOrder()]
+    state.contractRevision = acceptedOrders(state.orders).length
   }
   if (id === 'regular-payment-schedule' || id === 'regular-payment-schedule-draft' || id === 'regular-payment-schedule-progress') state.milestones = regularMilestones()
   if (id === 'regular-payment-schedule-draft') {
@@ -331,10 +347,10 @@ export function initialLifecycle(scenario: string): LifecycleState {
   if (scenario.startsWith('co-')) {
     const key = scenario.slice(3) as ChangeOrderScenarioId
     state.original = originalScope(coEstimateLines.map(line => ({ id: line.id, name: line.name, description: line.description, qty: line.qty, contract: amount(line), previous: 0, sku: '', code: '' })))
-    state.orders = scenarioOrders(key)
-    state.contractRevision = acceptedOrders(state.orders).length
     const amounts = key === 'partial-no-co' || key === 'partial-accepted' ? [5000, 4000, 6000] : key === 'pending' ? [2500, 0, 5000] : key === 'over-invoiced' ? [25000, 20000, 25000] : null
     if (amounts) state.invoices = [{ ...draftInvoice(state, state.original, amounts), status: key === 'pending' ? 'Draft' : 'Open' }]
+    state.orders = scenarioOrders(key)
+    state.contractRevision = acceptedOrders(state.orders).length
   }
   if (scenario.startsWith('contract-')) {
     const seed = contractScenarios.find(item => item.id === scenario.slice(9))!
@@ -349,7 +365,7 @@ export function initialLifecycle(scenario: string): LifecycleState {
     state = { ...state, accepted: seed.accepted, preAcceptanceStatus: seed.preAcceptanceStatus, onAcceptance: seed.onAcceptance, retainageEnabled: seed.retainageDefault !== undefined, retainageDefault: seed.retainageDefault, milestones: seed.milestones.map(item => ({ ...item })) }
     state.original = originalScope(scenarioLines(seed.retainageDefault !== undefined ? 'retainage-new' : 'unbilled'))
     if (seed.acceptedChangeOrder) { state.orders = scenarioOrders('partial-accepted'); state.contractRevision = acceptedOrders(state.orders).length }
-    state.invoices = seed.invoices.map(invoice => ({ ...draftInvoice(state, state.original, Object.values(invoice.amounts)), id: invoice.id, status: invoice.status, milestoneId: invoice.milestoneId, milestoneName: invoice.milestoneName, retainagePercent: invoice.retainagePercent, milestoneContractValue: seed.acceptedChangeOrder ? seed.contractValue - seed.acceptedChangeOrder : seed.contractValue, lineIds: state.original.map(line => line.id) }))
+    state.invoices = seed.invoices.map(invoice => ({ ...draftInvoice(state, state.original, Object.values(invoice.amounts)), id: invoice.id, status: invoice.status, contractRevision: seed.acceptedChangeOrder ? 0 : state.contractRevision, milestoneId: invoice.milestoneId, milestoneName: invoice.milestoneName, retainagePercent: invoice.retainagePercent, milestoneContractValue: seed.acceptedChangeOrder ? seed.contractValue - seed.acceptedChangeOrder : seed.contractValue, lineIds: state.original.map(line => line.id) }))
   }
   state.contractRevision = acceptedOrders(state.orders).length
   state.invoices = state.invoices.map(invoice => ({ ...invoice, contractRevision: invoice.contractRevision ?? state.contractRevision, lineIds: invoice.lineIds ?? state.original.map(line => line.id), lineSnapshot: invoice.lineSnapshot ?? state.original.map(line => ({ ...line })) }))

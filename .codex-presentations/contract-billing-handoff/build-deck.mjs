@@ -284,6 +284,7 @@ function addNativeTable(slide, { x, y, w, h, values, widths, headerFill = C.ink,
   addList(slide, ["Copied lines can change under existing rules", "Saving the Draft creates the conversion lock", "Deleting or canceling removes that lock when allowed"], 64, 438, 520, { gap: 56, size: 18, accent: C.green });
   addText(slide, "Separate from tracked Progress billing", 676, 388, 520, 30, { size: 18, bold: true });
   addList(slide, ["No Contract Progress allocation", "No source-line Progress ledger", "No milestone or Retainage Release behavior"], 676, 438, 520, { gap: 56, size: 18, accent: C.red });
+  addBand(slide, "One active Standard Invoice per Estimate; unavailable after tracked Progress history — enforce across creation, linking, API, import, and automation.", 64, 600, 1152, 54, C.blueSoft, C.blue);
   setNotes(slide, `${sourceNotes.progress} Source: docs/contract-billing-business-rules.md, Standard Invoice conversion.`);
 }
 

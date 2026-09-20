@@ -538,6 +538,13 @@ but become financially locked; newly accepted CO scope must be billed on a new
 tracked invoice against the new revision. It cannot be added retroactively to an
 older Open invoice.
 
+Every saved tracked invoice persists the accepted Contract revision and the
+source-line financial snapshot used when it was created. Reopening the internal
+invoice, PDF, or Customer Web Link must render that snapshot rather than rebuild
+the document from the current Contract. Later Contract revisions must not add or
+remove invoice lines or change the saved Contract Amounts, quantities,
+allocations, discount, tax, Cost Plus, retainage, or other financial facts.
+
 ## Implementation boundaries and acceptance checks
 
 Retainage behavior is specified in `docs/retainage-prototype.md`. The Estimate

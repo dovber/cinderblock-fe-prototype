@@ -126,6 +126,13 @@ available for normal payment activity but cannot consume newly accepted or
 modified CO scope. New CO scope is billed through a new tracked invoice against
 the new revision.
 
+Existing tracked invoices remain historical snapshots of the accepted Contract
+revision used to create them. Accepting a Change Order must not add its lines to
+an earlier invoice or change that invoice's saved Contract Amounts, quantities,
+allocations, discount, tax, Cost Plus, retainage, or other financial facts. The
+revised Contract applies to invoices created after acceptance and to current
+Contract summaries only.
+
 Customer acceptance is revision-specific for Estimates and for Change Orders
 before acceptance. The customer link identifies one saved revision. A later
 pre-acceptance financial edit

@@ -85,7 +85,9 @@ launcher.
   fulfillment, preserves cancellation reason/time and original invoice amounts,
   and shows a notice. It also locks preceding Open invoices against financial
   edits because they belong to the prior contract revision. A fresh draw uses the
-  changed accepted contract.
+  changed accepted contract. Every saved invoice continues to render the Contract
+  revision and source-line financial snapshot captured when it was created;
+  later CO scope never appears on an earlier invoice.
 - Standard conversion preserves the shared copy editor and removes the schedule;
   subsequent tracked billing and CO creation are unavailable.
 
