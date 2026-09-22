@@ -257,7 +257,7 @@ export function ChangeOrderEditor({ notice, originalContractValue, contractValue
                 <div><dt>Subtotal</dt><dd>{money(lineSubtotal)}</dd></div>
                 {order.costPlusPercent > 0 && <><div><dt>Cost plus</dt><dd>{order.costPlusPercent}%</dd></div><div><dt>Cost plus fee</dt><dd>{money(costPlus)}</dd></div></>}
                 {(order.discount !== 0 || contractDiscountPool > 0) && <div><dt>Discount</dt><dd>{locked ? money(order.discount) : <div className={s.adjustment}><span>$</span><input aria-label="Change Order discount" aria-invalid={Boolean(discountError)} aria-describedby={discountError ? 'change-order-discount-error' : undefined} inputMode="decimal" value={discountInput} onBlur={() => { if (discountInput.trim() === '') setDiscountInput('0'); else if (!Number.isFinite(parsedDiscount)) setDiscountInput(String(order.discount)); else setDiscountInput(String(parsedDiscount)) }} onChange={event => { const value = event.target.value; setDiscountInput(value); const parsed = value.trim() === '' ? 0 : parseSignedChangeOrderValue(value); if (Number.isFinite(parsed)) onChange({ ...order, discount: parsed }) }}/></div>}</dd></div>}
-                <div className={s.total}><dt>Contract change</dt><dd>{money(total)}</dd></div>
+                <div className={s.total}><dt>Contract change</dt><dd>{total > 0 ? `+${money(total)}` : money(total)}</dd></div>
               </dl>
             </div>
             {discountError && <p id="change-order-discount-error" className={s.validationSummary} role="alert">{discountError}</p>}
