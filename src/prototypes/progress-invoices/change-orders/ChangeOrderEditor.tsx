@@ -16,6 +16,7 @@ import {
   hasMeaningfulAdjustment,
   money,
   openChangeOrderAdjustment,
+  parseSignedChangeOrderValue,
   type AdjustmentLine,
   type ChangeOrder,
 } from './model'
@@ -51,7 +52,26 @@ type Props = {
   onCancelStatus: () => void
 }
 
-const numericValue = (value: string) => Number(value) || 0
+function SignedNumberInput({ label, value, className, onChange }: { label: string; value: number; className?: string; onChange: (value: number) => void }) {
+  const [input, setInput] = useState(() => String(value))
+  return <input
+    className={className}
+    aria-label={label}
+    inputMode="decimal"
+    value={input}
+    onBlur={() => {
+      const parsed = parseSignedChangeOrderValue(input)
+      setInput(String(Number.isFinite(parsed) ? parsed : value))
+    }}
+    onChange={event => {
+      const next = event.target.value
+      setInput(next)
+      const parsed = parseSignedChangeOrderValue(next)
+      if (Number.isFinite(parsed)) onChange(parsed)
+    }}
+  />
+}
+
 function LifecycleConfirmation({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -85,7 +105,7 @@ export function ChangeOrderEditor({ notice, originalContractValue, contractValue
   const lineSubtotal = changeOrderLineSubtotal(order)
   const costPlus = changeOrderCostPlus(order)
   const total = changeOrderImpact(order)
-  const parsedDiscount = discountInput.trim() === '' ? 0 : Number(discountInput)
+  const parsedDiscount = discountInput.trim() === '' ? 0 : parseSignedChangeOrderValue(discountInput)
   const minimumDiscount = contractDiscountPool > 0 ? -contractDiscountPool : 0
   const discountError = !Number.isFinite(parsedDiscount)
     ? 'Enter a valid discount adjustment.'
@@ -223,8 +243,8 @@ export function ChangeOrderEditor({ notice, originalContractValue, contractValue
                     <td className={s.estimateItemName + ' ' + s.changeOrderItemName}>
                       {rowLocked ? <><strong>{line.name}{lineLockReason && <LineItemLockIndicator reason={lineLockReason}/>}</strong><span>{line.description}</span></> : <><input aria-label={'Item name for line ' + (index + 1)} placeholder="Item name" value={line.name} onChange={event => updateLine(line.id, { name: event.target.value })}/><textarea aria-label={'Description for ' + lineLabel} placeholder="Add description" value={line.description} onChange={event => updateLine(line.id, { description: event.target.value })}/></>}
                     </td>
-                    <td className={s.numeric}>{rowLocked ? money(line.price) : <input className={s.tableNumberInput} aria-label={'Price for ' + lineLabel} inputMode="decimal" value={line.price} onChange={event => updateLine(line.id, { price: numericValue(event.target.value) })}/>}</td>
-                    <td className={s.numeric}>{rowLocked ? line.qty : <input className={s.tableNumberInput + ' ' + s.qtyTableInput} aria-label={'Quantity for ' + lineLabel} inputMode="decimal" value={line.qty} onChange={event => updateLine(line.id, { qty: numericValue(event.target.value) })}/>}</td>
+                    <td className={s.numeric}>{rowLocked ? money(line.price) : <SignedNumberInput className={s.tableNumberInput} label={'Price for ' + lineLabel} value={line.price} onChange={price => updateLine(line.id, { price })}/>}</td>
+                    <td className={s.numeric}>{rowLocked ? line.qty : <SignedNumberInput className={s.tableNumberInput + ' ' + s.qtyTableInput} label={'Quantity for ' + lineLabel} value={line.qty} onChange={qty => updateLine(line.id, { qty })}/>}</td>
                     <td className={s.numeric}><strong>{money(amount(line))}</strong></td>
                     <td className={s.menuColumn}>{!locked && <IconButton label={'Remove ' + (line.name || 'line')} onClick={() => onChange({ ...order, lines: order.lines.filter(item => item.id !== line.id) })}><X size={16}/></IconButton>}</td>
                   </tr>
@@ -236,7 +256,7 @@ export function ChangeOrderEditor({ notice, originalContractValue, contractValue
               <dl className={s.normalEstimateTotals}>
                 <div><dt>Subtotal</dt><dd>{money(lineSubtotal)}</dd></div>
                 {order.costPlusPercent > 0 && <><div><dt>Cost plus</dt><dd>{order.costPlusPercent}%</dd></div><div><dt>Cost plus fee</dt><dd>{money(costPlus)}</dd></div></>}
-                {(order.discount !== 0 || contractDiscountPool > 0) && <div><dt>Discount</dt><dd>{locked ? money(order.discount) : <div className={s.adjustment}><span>$</span><input aria-label="Change Order discount" aria-invalid={Boolean(discountError)} aria-describedby={discountError ? 'change-order-discount-error' : undefined} inputMode="decimal" value={discountInput} onBlur={() => { if (discountInput.trim() === '') setDiscountInput('0'); else if (!Number.isFinite(parsedDiscount)) setDiscountInput(String(order.discount)) }} onChange={event => { const value = event.target.value; setDiscountInput(value); const parsed = value.trim() === '' ? 0 : Number(value); if (Number.isFinite(parsed)) onChange({ ...order, discount: parsed }) }}/></div>}</dd></div>}
+                {(order.discount !== 0 || contractDiscountPool > 0) && <div><dt>Discount</dt><dd>{locked ? money(order.discount) : <div className={s.adjustment}><span>$</span><input aria-label="Change Order discount" aria-invalid={Boolean(discountError)} aria-describedby={discountError ? 'change-order-discount-error' : undefined} inputMode="decimal" value={discountInput} onBlur={() => { if (discountInput.trim() === '') setDiscountInput('0'); else if (!Number.isFinite(parsedDiscount)) setDiscountInput(String(order.discount)); else setDiscountInput(String(parsedDiscount)) }} onChange={event => { const value = event.target.value; setDiscountInput(value); const parsed = value.trim() === '' ? 0 : parseSignedChangeOrderValue(value); if (Number.isFinite(parsed)) onChange({ ...order, discount: parsed }) }}/></div>}</dd></div>}
                 <div className={s.total}><dt>Contract change</dt><dd>{money(total)}</dd></div>
               </dl>
             </div>

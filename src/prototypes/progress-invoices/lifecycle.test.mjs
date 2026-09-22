@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { acceptChangeOrder, acceptSavedChangeOrder, acceptedValue, availableContractDiscount, billingLines, cancelLifecycleInvoice, contractDiscountPool, contractScope, currentContractRevision, draftInvoice, draftReservedValue, grossContractScope, hasDraft, historicalTaxCreditGenerated, initialLifecycle, invoiceAmounts, invoiceSnapshotLines, isTrackedInvoiceFinanciallyEditable, lifecycleScenarios, regularScenarios, regularScenarioState, saveLifecycleInvoice, taxCreditBalance, toChangeOrderSources, totalBilled, totalGrossBilled, trackedInvoiceFinancialLockReason } from './lifecycle.ts'
-import { blankAdjustmentLine, changeOrderCostPlus, changeOrderImpact, hasMeaningfulAdjustment, newChangeOrder } from './change-orders/model.ts'
+import { amount as changeOrderLineAmount, blankAdjustmentLine, changeOrderCostPlus, changeOrderImpact, changeOrderLineSubtotal, hasMeaningfulAdjustment, money as changeOrderMoney, newChangeOrder, parseSignedChangeOrderValue } from './change-orders/model.ts'
 import { invoiceRetainageWithheld, sum } from './model.ts'
 import { milestoneAmount } from './schedule/model.ts'
 import { paymentSchedulePercentage } from '../../shared/ui/paymentScheduleMath.ts'
@@ -223,6 +223,35 @@ test('a Change Order cannot reduce the contract discount pool below zero', () =>
   assert.equal(contractDiscountPool(next), 10000)
   assert.equal(next.orders[0].status, 'Draft')
   assert.match(next.notice, /below \$0\.00/)
+})
+test('signed Change Order inputs remain negative through persistence and contract calculations', () => {
+  assert.equal(parseSignedChangeOrderValue('500'), 500)
+  assert.equal(parseSignedChangeOrderValue('-500'), -500)
+  assert.equal(parseSignedChangeOrderValue('-500.25'), -500.25)
+  assert.equal(parseSignedChangeOrderValue('-$500'), -500)
+  assert.equal(parseSignedChangeOrderValue('$-500'), -500)
+  assert.equal(changeOrderMoney(-500.25), '-$500.25')
+  assert.equal(changeOrderLineAmount({ price: 500, qty: parseSignedChangeOrderValue('-2.5') }), -1250)
+
+  let state = { ...regularScenarioState('regular-no-invoices'), discount: 1000 }
+  const valueBefore = acceptedValue(state)
+  const order = newChangeOrder(1, [], undefined, toChangeOrderSources(state.original))
+  order.lines = [{ ...blankAdjustmentLine(order.id, 1), name: 'Deductive allowance', price: parseSignedChangeOrderValue('-500.25'), qty: 1 }]
+  order.discount = parseSignedChangeOrderValue('-100')
+
+  assert.equal(changeOrderLineAmount(order.lines[0]), -500.25)
+  assert.equal(changeOrderLineSubtotal(order), -500.25)
+  assert.equal(changeOrderImpact(order), -400.25)
+
+  const reloaded = JSON.parse(JSON.stringify(order))
+  assert.equal(reloaded.lines[0].price, -500.25)
+  assert.equal(reloaded.discount, -100)
+
+  state = acceptChangeOrder({ ...state, orders: [reloaded] }, reloaded)
+  assert.equal(state.orders[0].lines[0].price, -500.25)
+  assert.equal(state.orders[0].discount, -100)
+  assert.equal(contractDiscountPool(state), 900)
+  assert.equal(acceptedValue(state), valueBefore - 400.25)
 })
 test('a Change Order cannot be accepted when it would make Contract Value negative', () => {
   let state = regularScenarioState('regular-no-invoices')

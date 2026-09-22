@@ -54,6 +54,11 @@ export const money = (value: number) => new Intl.NumberFormat('en-US', { style: 
 export const sum = (values: number[]) => values.reduce((total, value) => total + value, 0)
 export const estimateTotal = sum(estimateLines.map(amount))
 
+export function parseSignedChangeOrderValue(value: string) {
+  const normalized = value.trim().replaceAll(',', '').replaceAll('$', '')
+  return normalized !== '' && /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized) ? Number(normalized) : NaN
+}
+
 export const changeOrderScenarios: { id: ChangeOrderScenarioId; label: string }[] = [
   { id: 'none', label: 'No Change Orders' },
   { id: 'draft', label: 'Draft CO' },

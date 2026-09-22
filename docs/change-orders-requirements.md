@@ -52,7 +52,11 @@ New scope uses ordinary editable rows. Before an editable addition exists, the n
 
 Cost and Markup are not part of the Change Order editing or presentation model.
 The line-item table contains Item name, Price, Qty, and Amount. All Change Order
-line and document financial calculations use customer-facing Price multiplied by
+numeric inputs that permit contract adjustments preserve signed values through
+entry, save, reload, formatting, and downstream totals. A negative Price or Qty
+produces a signed line Amount, and signed CO discount adjustments remain signed;
+the editor does not strip, normalize, or clamp a leading minus sign.
+Change Order line and document financial calculations use customer-facing Price multiplied by
 Qty; internal Estimate Cost and Markup values are neither inherited into the CO
 interface nor shown in CO summaries.
 
