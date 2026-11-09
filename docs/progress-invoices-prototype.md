@@ -258,6 +258,14 @@ applicable percentage and calculated fee, but the percentage is read-only and
 cannot be introduced, removed, or modified from a Progress Invoice. A flat
 adjustment belongs in a normal Change Order line item.
 
+The **Select items to invoice** dialog displays only regular estimate/contract
+items, with no Cost Plus rows, labels, or fee summary. Related Cost Plus scope
+continues to be allocated automatically with the selected base items. In the
+internal invoice editor, Cost Plus is not an item-table row. Show a read-only
+**Cost plus fee: $360.00 (20%)** summary immediately above Subtotal, using the
+actual allocated fee and inherited percentage. This presentation also applies
+to the Standard Invoice editor; customer document rendering stays separate.
+
 The displayed fee is a summary of explicit Cost Plus contract scope allocated
 with its associated base lines. The invoice never recalculates Cost Plus over its
 subtotal. Cost Plus is based on selling Price, retains source lineage, and may

@@ -264,6 +264,15 @@ introduce, remove, or modify the rate. A contractor who needs an economic
 adjustment uses explicit Change Order line items. An invoice consumes existing
 Cost Plus scope in the same proportion as its associated base scope. It never
 calculates Cost Plus again over an invoice subtotal or over Cost Plus scope.
+In **Select items to invoice**, show only regular source items; omit all Cost
+Plus rows, labels, and fee summaries. Selecting base scope automatically allocates
+its associated Cost Plus scope. In internal Standard and Progress Invoice editors,
+show a read-only **Cost plus fee: $360.00 (20%)** summary immediately above
+Subtotal, using the actual fee and inherited percentage. Do not display Cost Plus
+as a line item in the internal table. Subtotal includes the fee once. This is a
+presentation rule; underlying scope tracking and customer-document presentation
+remain separate.
+
 Production tracks Cost Plus Contract Scope, Draft Reserved, Posted, and Remaining
 while preserving source lineage. Cost Plus taxability is an independent contract
 setting and is not inferred from the underlying line's taxability.

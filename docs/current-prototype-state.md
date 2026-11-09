@@ -267,6 +267,17 @@ Maintain the documented distinction between internal application UI and customer
 documents. Do not flatten those variants into one rendering model merely because
 their data overlaps.
 
+## Cost Plus invoice presentation correction
+
+In **Select items to invoice**, show only regular source items; omit all Cost
+Plus rows, labels, and fee summaries. Selecting base scope automatically allocates
+its associated Cost Plus scope. In internal Standard and Progress Invoice editors,
+show a read-only **Cost plus fee: $360.00 (20%)** summary immediately above
+Subtotal, using the actual fee and inherited percentage. Do not display Cost Plus
+as a line item in the internal table. Subtotal includes the fee once. This is a
+presentation rule; underlying scope tracking and customer-document presentation
+remain separate.
+
 ## Run and verify
 
 From the project root:

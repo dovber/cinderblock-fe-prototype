@@ -119,8 +119,6 @@ export function InvoiceEditor({ contractValue, contractPreviouslyBilled, lines, 
 
   const regularLineEntries = lines.map((line, index) => ({ line, index })).filter(({ line }) => line.scopeKind !== 'cost-plus')
 
-  const costPlusLines = lines.filter(line => line.scopeKind === 'cost-plus')
-
   const grouped = regularLineEntries.some(({ line }) => line.sourceId && line.sourceId !== 'estimate')
   const columnCount = 4 + [visible.contract, visible.previous, visible.current, visible.completion].filter(Boolean).length
 
@@ -133,10 +131,6 @@ export function InvoiceEditor({ contractValue, contractPreviouslyBilled, lines, 
   const retainageRate = parseAmount(retainagePercent)
 
   const fee = invoiceCostPlusAllocation(lines, validAmounts)
-
-  const costPlusContract = rounded(sum(costPlusLines.map(line => line.contract)))
-
-  const costPlusPreviouslyBilled = rounded(sum(costPlusLines.map(line => line.previous)))
 
   const subtotal = lineSubtotal
 
@@ -295,13 +289,15 @@ export function InvoiceEditor({ contractValue, contractPreviouslyBilled, lines, 
                 <td className={`${s.numeric} ${s.historical}`}>{line.kind === 'removal' || line.kind === 'superseded' || errors[index] ? <EmptyValue/> : money(Math.max(0, rounded(line.contract - line.previous - validAmounts[index])))}</td>
 
               </tr></Fragment>
-              })}{feePercent > 0 && <tr data-line="cost-plus-fee"><td className={s.rowNumber}>{regularLineEntries.length + 1}</td><td className={s.itemName}><div>Cost plus fee<LineItemLockIndicator reason="This item is locked because Cost Plus billing is calculated from the applicable contract items."/></div><LineItemDescription description={`Cost plus at ${percent(feePercent)}`} className={s.itemDescription}/></td><td className={s.historical}>1</td>{visible.contract && <td className={`${s.numeric} ${s.historical}`}>{money(costPlusContract)}</td>}{visible.previous && <td className={`${s.numeric} ${s.historical}`}>{money(costPlusPreviouslyBilled)}</td>}{visible.current && <td className={s.currentCell}><span className={s.lockedAmount}>{money(fee)}</span></td>}{visible.completion && <td className={s.numeric}/>}<td className={`${s.numeric} ${s.historical}`}>{money(Math.max(0, rounded(costPlusContract - costPlusPreviouslyBilled - fee)))}</td></tr>}</tbody>
+              })}</tbody>
 
             </table></div>
 
             {errors.some(Boolean) && <p className={s.validationSummary} role="alert">Correct the highlighted invoice amounts before saving.</p>}
 
             <div className={s.totalsArea}><dl className={s.invoiceTotals}>
+
+              {feePercent > 0 && <div><dt>Cost plus fee:</dt><dd>{money(fee)} ({percent(feePercent)})</dd></div>}
 
               <div><dt>{retainageEnabled ? 'Subtotal billed' : 'Subtotal'} <Info size={13} aria-label="Line amounts including allocated Cost Plus scope"/></dt><dd>{money(subtotal)}</dd></div>
 

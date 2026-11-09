@@ -176,7 +176,10 @@ muted contract/previous values. Editable billable current amounts may show the
 compact `Apply remaining` shortcut beneath the input. Estimate and Change Order
 document tables retain their normal item columns without line-level completion.
 Tiny tax markers appear beside current values. The bottom block contains the
-read-only contract-derived Cost Plus percentage, Cost plus fee, Subtotal with info icon,
+read-only Cost plus fee summary with its contract-derived percentage immediately
+above Subtotal (for example, Cost plus fee: $360.00 (20%)); never an internal
+Cost Plus item-table row. Item selection omits every Cost Plus mention. Then show
+Subtotal with info icon,
 currency-prefix Discount, tax with info icon, and a bold Total.
 
 Do not expose editor-only cost, markup, margin, profit, settings, or internal notes in customer documents. Preserve separate display models rather than dumping an editor table into the preview. The financial examples in the progress mockups are not reliable calculation specifications; do not derive billing rules from their totals.
